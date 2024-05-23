@@ -1,3 +1,5 @@
+const serverUrl = process.env.SERVER_URL || 'http://localhost:8080';
+
 document.addEventListener('DOMContentLoaded', () => {
     if (window.receivedData) {
 
@@ -18,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Extract headers
         const receivedHeaders = getHeadersFromQuery();
 
-        fetch('/api/data', {
+        fetch(`${serverUrl}/v1/_payment/challan_data`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ const port = 3000;
 app.use(express.static('public'));
 app.use(express.json());
 
-app.post('/api/data', (req, res) => {
+app.post('', (req, res) => {
 
     const paymentStatus = req.body.status; 
 
