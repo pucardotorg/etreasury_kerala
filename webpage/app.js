@@ -4,11 +4,12 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const port = 3000;
+const contextPath = '/ePayments';  
 
 app.use(express.static('public'));
 app.use(express.json());
 
-app.post('', (req, res) => {
+app.post(`${contextPath}`, (req, res) => {
 
     const paymentStatus = req.body.status; 
 

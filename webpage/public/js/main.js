@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Extract headers
         const receivedHeaders = getHeadersFromQuery();
 
-        fetch(`${serverUrl}/v1/_payment/challan_data`, {
+        fetch(`${serverUrl}/v1/payment/challan_data`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
