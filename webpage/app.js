@@ -3,8 +3,8 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const app = express();
-const port = 3000;
-const contextPath = '/ePayments';  
+const port = 8080;
+const contextPath = '/epayments';
 
 app.use(express.static('public'));
 app.use(express.json());
