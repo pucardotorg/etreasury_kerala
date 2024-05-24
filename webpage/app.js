@@ -4,7 +4,8 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const port = 8080;
-const contextPath = '/epayments';
+const externalHost = process.env.EXTERNAL_HOST || 'http://localhost:8080';
+const contextPath = '/epayments';  
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -30,5 +31,5 @@ app.post(`${contextPath}`, (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running at ${externalHost}${contextPath}`);
 });

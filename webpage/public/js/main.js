@@ -1,4 +1,4 @@
-const serverUrl = process.env.SERVER_URL || 'http://localhost:8080';
+const serverUrl = process.env.SERVER_URL || 'http://localhost:8090';
 
 document.addEventListener('DOMContentLoaded', () => {
     if (window.receivedData) {
