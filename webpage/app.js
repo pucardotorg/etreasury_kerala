@@ -33,7 +33,7 @@ app.post(`${contextPath}`, (req, res) => {
     console.log('Payment Status: ', paymentStatus);
 
     let htmlFile;
-    if (paymentStatus === 'true' || paymentStatus == 'Y' || paymentStatus == 'success') {
+    if (paymentStatus == 'true' || paymentStatus == 'Y' || paymentStatus == 'success') {
         htmlFile = 'payment-success.html';
     } else {
         htmlFile = 'payment-failure.html';
