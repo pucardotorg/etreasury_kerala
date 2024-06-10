@@ -27,9 +27,11 @@ app.post(`${contextPath}`, (req, res) => {
     returnHeader = JSON.parse(req.body.RETURN_HEADER);
 
     const paymentStatus = returnParams.status;
-    const authToken = returnHeader.AuthToken;
 
     // Serve different HTML pages based on payment status
+    console.log('Reurn Params: ', returnParams);
+    console.log('Payment Status: ', paymentStatus);
+
     let htmlFile;
     if (typeof paymentStatus === 'undefined' || paymentStatus === 'true' || paymentStatus == 'Y' || paymentStatus == 'success') {
         htmlFile = 'payment-success.html';
