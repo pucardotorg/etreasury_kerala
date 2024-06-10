@@ -20,7 +20,6 @@ jobs:
            docker build  -t epayments:v1.0.0-${{ github.sha }} -f webpage/Dockerfile .
            docker tag epayments:v1.0.0-${{ github.sha }} pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
            docker push pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
-        working-directory: backend/order/src/main/resources/db
       - name: Trigger Deployment Pipeline
         run: |
          curl -X POST \
