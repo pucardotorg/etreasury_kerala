@@ -30,7 +30,7 @@ app.post(`${contextPath}`, (req, res) => {
 
     // Serve different HTML pages based on payment status
     let htmlFile;
-    if (paymentStatus === 'true' || paymentStatus == 'Y' || paymentStatus == 'success') {
+    if (typeof paymentStatus === 'undefined' || paymentStatus === 'true' || paymentStatus == 'Y' || paymentStatus == 'success') {
         htmlFile = 'payment-success.html';
     } else {
         htmlFile = 'payment-failure.html';
