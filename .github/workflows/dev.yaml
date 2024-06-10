@@ -17,9 +17,10 @@ jobs:
         run: docker login -u test123 -p ${{ secrets.ACR_PAT }} pucarsolutionsdev.azurecr.io
       - name: Build and Push Docker image for etreasury
         run: |
-           docker build  -t epayments:v1.0.0-${{ github.sha }} -f webpage/Dockerfile .
+           docker build  -t epayments:v1.0.0-${{ github.sha }} -f Dockerfile .
            docker tag epayments:v1.0.0-${{ github.sha }} pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
            docker push pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
+        working-directory: webpage
       - name: Trigger Deployment Pipeline
         run: |
          curl -X POST \
