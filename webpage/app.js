@@ -23,10 +23,11 @@ app.use(express.static('public'));
 
 app.post(`${contextPath}`, (req, res) => {
 
-    // Log the received data
-    console.log(req.body);
+    returnParams = JSON.parse(req.body.RETURN_PARAMS);
+    returnHeader = JSON.parse(req.body.RETURN_HEADER);
 
-    const paymentStatus = req.body.status; 
+    const paymentStatus = returnParams.status;
+    const authToken = returnHeader.AuthToken;
 
     // Serve different HTML pages based on payment status
     let htmlFile;
@@ -37,7 +38,7 @@ app.post(`${contextPath}`, (req, res) => {
     }
 
     // Send a response with the appropriate HTML file
-    //res.sendFile(path.join(__dirname, 'public', htmlFile));
+    res.sendFile(path.join(__dirname, 'public', htmlFile));
 
 });
 
