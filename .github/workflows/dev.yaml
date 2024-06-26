@@ -2,7 +2,10 @@ name: dristi workflow
 on:
   push:
     branches:
-      - webpage
+      - develop
+  pull_request:
+    branches:
+      - develop
   workflow_dispatch:
 jobs:
   docker_image-build:
@@ -20,7 +23,7 @@ jobs:
            docker build  -t epayments:v1.0.0-${{ github.sha }} -f Dockerfile .
            docker tag epayments:v1.0.0-${{ github.sha }} pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
            docker push pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
-        working-directory: webpage
+        working-directory: treasury-webpage
       - name: Trigger Deployment Pipeline
         run: |
          curl -X POST \
