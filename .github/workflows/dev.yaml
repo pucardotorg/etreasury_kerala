@@ -1,0 +1,30 @@
+name: dristi workflow
+on:
+  push:
+    branches:
+      - webpage
+  workflow_dispatch:
+jobs:
+  docker_image-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v1
+      # Login to Azure Container Registry
+      - name: Login to Azure Container Registry
+        run: docker login -u test123 -p ${{ secrets.ACR_PAT }} pucarsolutionsdev.azurecr.io
+      - name: Build and Push Docker image for etreasury
+        run: |
+           docker build  -t epayments:v1.0.0-${{ github.sha }} -f Dockerfile .
+           docker tag epayments:v1.0.0-${{ github.sha }} pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
+           docker push pucarsolutionsdev.azurecr.io/epayments:v1.0.0-${{ github.sha }}
+        working-directory: webpage
+      - name: Trigger Deployment Pipeline
+        run: |
+         curl -X POST \
+         -H "Accept: application/vnd.github.v3+json" \
+         -H "Authorization: token ${{ secrets.GHUB_TOKEN }}" \
+         https://api.github.com/repos/pucardotorg/pucar-Devops/actions/workflows/solutions-dev.yaml/dispatches \
+         -d '{"ref":"paymentpage-solutions"}'
