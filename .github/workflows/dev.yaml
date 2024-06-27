@@ -20,7 +20,7 @@ jobs:
 
       # Login to Azure Container Registry
       - name: Login to Azure Container Registry
-        run: docker login -u test123 -p ${{ secrets.ACR_PAT }} pucarsolutionsdev.azurecr.io
+        run: docker login -u pucarsolutionsdev -p ${{ secrets.ACR_PASSWORD }} pucarsolutionsdev.azurecr.io
 
       - name: Build and Push Docker image for etreasury-webpage
         run: |
