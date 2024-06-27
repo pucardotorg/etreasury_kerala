@@ -31,7 +31,7 @@ jobs:
 
       - name: Build and Push Docker image for etreasury-backend
         run: |
-          docker build --build-arg WORK_DIR="treasury-backend" -t pucarsolutionsdev.azurecr.io/etreasury-:v1.0.0-${{ github.sha }} -f build/maven/Dockerfile .
+          docker build --build-arg WORK_DIR="treasury-backend" -t pucarsolutionsdev.azurecr.io/etreasury:v1.0.0-${{ github.sha }} -f build/maven/Dockerfile .
           docker push pucarsolutionsdev.azurecr.io/etreasury-:v1.0.0-${{ github.sha }}
 
       - name: Trigger Deployment Pipeline
