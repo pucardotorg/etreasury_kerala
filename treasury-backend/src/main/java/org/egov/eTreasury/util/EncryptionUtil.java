@@ -28,7 +28,6 @@ public class EncryptionUtil {
         random.nextBytes(appKey);
         String appKeyBase64 = java.util.Base64.getEncoder().encodeToString(appKey);
         secretMap.put("appKey",appKeyBase64);
-        System.out.println("AppKey (Base64): " + appKeyBase64);
 
         // Convert the ClientSecret string to bytes (replace "yourClientSecret" with the actual secret)
         byte[] clientSecretBytes = clientSecret.getBytes();
