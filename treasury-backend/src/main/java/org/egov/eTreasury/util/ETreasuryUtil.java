@@ -35,7 +35,19 @@ public class ETreasuryUtil {
         body.add("input_data", inputBody);
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
-
         return restTemplate.postForEntity(url, requestEntity, Object.class);
+    }
+
+
+    public ResponseEntity<?> callAuthService(String clientId, String clientSecret, String payload, String url) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.setAccept(Collections.singletonList(MediaType.ALL));
+
+        httpHeaders.add("clientId", clientId);
+        httpHeaders.add("clientSecret", clientSecret);
+
+        HttpEntity<String> httpEntity = new HttpEntity<>(payload, httpHeaders);
+        return restTemplate.postForEntity(url, httpEntity, Object.class);
     }
 }
