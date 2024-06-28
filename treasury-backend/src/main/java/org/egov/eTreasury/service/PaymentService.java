@@ -82,6 +82,8 @@ public class PaymentService {
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
 
             // Prepare the request body
+            paymentDetails.setServiceDeptCode(config.getServiceDeptCode());
+            paymentDetails.setOfficeCode(config.getOfficeCode());
             String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(paymentDetails));
 
             // Prepare headers
@@ -109,6 +111,8 @@ public class PaymentService {
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
 
             // Prepare the request body
+            verificationDetails.setOfficeCode(config.getOfficeCode());
+            verificationDetails.setServiceDeptCode(config.getServiceDeptCode());
             String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(verificationDetails));
 
             // Prepare headers
@@ -167,6 +171,7 @@ public class PaymentService {
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
 
             // Prepare the request body
+            transactionDetails.setDepartmentId(config.getDeptReferenceId());
             String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(transactionDetails));
 
             // Prepare headers

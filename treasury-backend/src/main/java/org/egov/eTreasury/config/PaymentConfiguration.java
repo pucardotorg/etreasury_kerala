@@ -27,6 +27,15 @@ public class PaymentConfiguration {
     @Value("${treasury-client-id}")
     private String clientId;
 
+    @Value("${service-dept-code}")
+    private String serviceDeptCode;
+
+    @Value("${office-code}")
+    private String officeCode;
+
+    @Value("${dept-reference-id}")
+    private String deptReferenceId;
+
     @Value("${treasury-auth-url}")
     private String authUrl;
 
