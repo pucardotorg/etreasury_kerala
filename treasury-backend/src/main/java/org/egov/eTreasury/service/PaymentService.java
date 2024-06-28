@@ -46,29 +46,28 @@ public class PaymentService {
         try {
             // Generate client secret and app key
             secretMap = encryptionUtil.getClientSecretAndAppKey(config.getClientSecret(), config.getPublicKey());
-
             // Prepare authentication request payload
             AuthRequest authRequest = new AuthRequest(secretMap.get("encodedAppKey"));
             String payload = objectMapper.writeValueAsString(authRequest);
-
             // Call the authentication service
-            ResponseEntity<?> responseEntity = treasuryUtil.callAuthService(config.getClientId(), config.getClientSecret(),
-                    payload, config.getAuthUrl());
-            log.info("Response Body : {}", responseEntity.getBody());        
+            ResponseEntity<?> responseEntity = treasuryUtil.callAuthService(config.getClientId(), secretMap.get("encryptedClientSecret"),
+            payload, config.getAuthUrl());
+            log.info("Status Code: {}", responseEntity.getStatusCode());
+            log.info("Response Body: {}", responseEntity.getBody());
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                AuthResponse response = objectMapper.convertValue(responseEntity.getBody(), AuthResponse.class);
-                secretMap.put("sek", response.getData().getSek());
-                secretMap.put("authToken", response.getData().getAuthToken());
+            AuthResponse response = objectMapper.convertValue(responseEntity.getBody(), AuthResponse.class);
+            secretMap.put("sek", response.getData().getSek());
+            secretMap.put("authToken", response.getData().getAuthToken());
             } else {
-                throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
+            throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Authentication process failed: ", e);
             throw new CustomException("AUTHENTICATION_ERROR", "Error occurred during authentication");
         }
         return secretMap;
-    }
+        }
 
     public String processPayment(PaymentDetails paymentDetails) {
         try {
