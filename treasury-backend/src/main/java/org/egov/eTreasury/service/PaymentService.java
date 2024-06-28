@@ -54,7 +54,7 @@ public class PaymentService {
             // Call the authentication service
             ResponseEntity<?> responseEntity = treasuryUtil.callAuthService(config.getClientId(), config.getClientSecret(),
                     payload, config.getAuthUrl());
-
+            log.info("Response Body : {}", responseEntity.getBody());        
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 AuthResponse response = objectMapper.convertValue(responseEntity.getBody(), AuthResponse.class);
