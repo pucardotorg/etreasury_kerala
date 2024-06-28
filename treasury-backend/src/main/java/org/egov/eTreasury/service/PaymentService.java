@@ -47,18 +47,13 @@ public class PaymentService {
             // Generate client secret and app key
             secretMap = encryptionUtil.getClientSecretAndAppKey(config.getClientSecret(), config.getPublicKey());
 
-            // Prepare headers
-            Headers headers = new Headers();
-            headers.setClientId(config.getClientId());
-            headers.setClientSecret(secretMap.get("encryptedClientSecret"));
-            String headersData = objectMapper.writeValueAsString(headers);
-
             // Prepare authentication request payload
             AuthRequest authRequest = new AuthRequest(secretMap.get("encodedAppKey"));
             String payload = objectMapper.writeValueAsString(authRequest);
 
             // Call the authentication service
-            ResponseEntity<?> responseEntity = treasuryUtil.callService(headersData, payload, config.getAuthUrl());
+            ResponseEntity<?> responseEntity = treasuryUtil.callAuthService(config.getClientId(), config.getClientSecret(),
+                    payload, config.getAuthUrl());
 
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {

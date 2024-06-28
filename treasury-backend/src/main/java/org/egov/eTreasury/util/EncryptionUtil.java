@@ -18,40 +18,43 @@ import java.util.Map;
 @Slf4j
 public class EncryptionUtil {
 
-    public Map<String, String> getClientSecretAndAppKey(String clientSecret, String publicKeyString) throws Exception {
+    public Map<String, String> getClientSecretAndAppKey(String clientSecret, String publicKeyString) throws Exception{
+
         Map<String, String> secretMap = new HashMap<>();
 
         // Generate a random AES key (256 bits)
         byte[] appKey = new byte[32];
         SecureRandom random = new SecureRandom();
         random.nextBytes(appKey);
-        String appKeyBase64 = Base64.getEncoder().encodeToString(appKey);
-        secretMap.put("appKey", appKeyBase64);
+        String appKeyBase64 = java.util.Base64.getEncoder().encodeToString(appKey);
+        secretMap.put("appKey",appKeyBase64);
+        System.out.println("AppKey (Base64): " + appKeyBase64);
+
+        // Convert the ClientSecret string to bytes (replace "yourClientSecret" with the actual secret)
+        byte[] clientSecretBytes = clientSecret.getBytes();
 
         // Encrypt the ClientSecret using AES
-        byte[] clientSecretBytes = clientSecret.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec aesKey = new SecretKeySpec(appKey, "AES");
         Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
         byte[] encryptedClientSecretBytes = aesCipher.doFinal(clientSecretBytes);
 
-        // Encrypt the AppKey using RSA with the public key
-        PublicKey publicKey = getPublicKeyFromString(publicKeyString);
+        // Encrypt the AppKey using RSA with the public key provided by the Treasury
+        PublicKey publicKey = getPublicKeyFromString(publicKeyString); // Implement this method to get the public key
         Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
         rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] encryptedAppKeyBytes = rsaCipher.doFinal(appKey);
 
-        // Convert the encrypted bytes to Base64 strings
+        // Convert the encrypted bytes to Base64 strings for transmission or storage
         String encryptedClientSecretBase64 = Base64.getEncoder().encodeToString(encryptedClientSecretBytes);
         String encryptedAppKeyBase64 = Base64.getEncoder().encodeToString(encryptedAppKeyBytes);
 
         secretMap.put("encryptedClientSecret", encryptedClientSecretBase64);
         secretMap.put("encodedAppKey", encryptedAppKeyBase64);
-
         return secretMap;
     }
 
-    public PublicKey getPublicKeyFromString(String publicKeyString) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private PublicKey getPublicKeyFromString(String publicKeyString) throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyString);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
