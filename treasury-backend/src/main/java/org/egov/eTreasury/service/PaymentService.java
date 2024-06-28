@@ -1,6 +1,7 @@
 package org.egov.eTreasury.service;
 
 import org.egov.eTreasury.config.PaymentConfiguration;
+import org.egov.eTreasury.util.AuthUtil;
 import org.egov.eTreasury.util.ETreasuryUtil;
 import org.egov.eTreasury.util.EncryptionUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,13 +33,16 @@ public class PaymentService {
 
     private final EncryptionUtil encryptionUtil;
 
+    private final AuthUtil authUtil;
+
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
-                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil) {
+                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil, AuthUtil authUtil) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
         this.encryptionUtil = encryptionUtil;
+        this.authUtil = authUtil;
     }
 
     private Map<String, String> authenticate() {
@@ -50,17 +54,17 @@ public class PaymentService {
             AuthRequest authRequest = new AuthRequest(secretMap.get("encodedAppKey"));
             String payload = objectMapper.writeValueAsString(authRequest);
             // Call the authentication service
-            ResponseEntity<?> responseEntity = treasuryUtil.callAuthService(config.getClientId(), secretMap.get("encryptedClientSecret"),
+            ResponseEntity<?> responseEntity = authUtil.callAuthService(config.getClientId(), secretMap.get("encryptedClientSecret"),
             payload, config.getAuthUrl());
             log.info("Status Code: {}", responseEntity.getStatusCode());
             log.info("Response Body: {}", responseEntity.getBody());
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-            AuthResponse response = objectMapper.convertValue(responseEntity.getBody(), AuthResponse.class);
-            secretMap.put("sek", response.getData().getSek());
-            secretMap.put("authToken", response.getData().getAuthToken());
+                AuthResponse response = objectMapper.convertValue(responseEntity.getBody(), AuthResponse.class);
+                secretMap.put("sek", response.getData().getSek());
+                secretMap.put("authToken", response.getData().getAuthToken());
             } else {
-            throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
+               throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Authentication process failed: ", e);
@@ -69,7 +73,7 @@ public class PaymentService {
         return secretMap;
         }
 
-    public String processPayment(PaymentDetails paymentDetails) {
+    public HtmlPage processPayment(PaymentDetails paymentDetails) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -87,21 +91,16 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<?> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl());
-
-            // Process the response
-            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                return objectMapper.convertValue(responseEntity.getBody(), String.class);
-            } else {
-                throw new CustomException("CHALLAN_GENERATION_FAILED", "Error occurred for challan generate request");
-            }
+            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl(), String.class);
+            return HtmlPage.builder().decryptedSek(decryptedSek)
+                    .htmlString(responseEntity.getBody()).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
             throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF chsllan");
         }
     }
 
-    public String doubleVerifyPayment(VerificationDetails verificationDetails) {
+    public HtmlPage doubleVerifyPayment(VerificationDetails verificationDetails) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -119,15 +118,9 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<?> responseEntity = callService(headersData, postBody, config.getDoubleVerificationUrl());
-
-            // Process the response
-            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                return objectMapper.convertValue(responseEntity.getBody(), String.class);
-            } else {
-                throw new CustomException("DOUBLE_VERIFICATION_FAILED", "Double verification request Failed");
-            }
-        } catch (Exception e) {
+            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getDoubleVerificationUrl(), String.class);
+            return HtmlPage.builder().decryptedSek(decryptedSek)
+                    .htmlString(responseEntity.getBody()).build();        } catch (Exception e) {
             log.error("Double verification Error: ", e);
             throw new CustomException("DOUBLE_VERIFICATION_ERROR", "Error occurred during double verification");
         }
@@ -151,7 +144,7 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<?> responseEntity = callService(headersData, postBody, config.getPrintSlipUrl());
+            ResponseEntity<byte[]> responseEntity = callService(headersData, postBody, config.getPrintSlipUrl(), byte[].class);
 
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
@@ -183,14 +176,8 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<?> responseEntity = callService(headersData, postBody, config.getTransactionDetailsUrl());
-
-            // Process the response
-            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                return objectMapper.convertValue(responseEntity.getBody(), TransactionDetails.class);
-            } else {
-                throw new CustomException("TRANSACTION_DETAILS_FAILED", "Transaction details request failed");
-            }
+            ResponseEntity<TransactionDetails> responseEntity = callService(headersData, postBody, config.getTransactionDetailsUrl(), TransactionDetails.class);
+            return objectMapper.convertValue(responseEntity.getBody(), TransactionDetails.class);
         } catch (Exception e) {
             log.error("Transaction details retrieval failed: ", e);
             throw new CustomException("TRANSACTION_DETAILS_ERROR", "Error ccurred during transaction details retrieval");
@@ -198,8 +185,8 @@ public class PaymentService {
     }
 
 
-    private ResponseEntity callService(String headersData, String postBody, String url) {
-        return treasuryUtil.callService(headersData, postBody, url);
+    private <T> ResponseEntity<T> callService(String headersData, String postBody, String url, Class<T> responseType) {
+        return treasuryUtil.callService(headersData, postBody, url, responseType);
     }
 
     private String generatePostBody(String decryptedSek, String jsonData) {

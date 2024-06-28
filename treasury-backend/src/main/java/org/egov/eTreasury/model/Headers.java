@@ -17,9 +17,6 @@ public class Headers {
     @JsonProperty("clientId")
     private String clientId;
 
-    @JsonProperty("clientSecret")
-    private String clientSecret;
-
     @JsonProperty("authToken")
     private String authToken;
 }

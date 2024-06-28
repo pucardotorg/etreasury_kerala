@@ -74,7 +74,15 @@ public class EncryptionUtil {
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         sha256Hmac.init(secretKey);
         byte[] hmacBytes = sha256Hmac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(hmacBytes);
+        return bytesToEncodedString(hmacBytes);
+    }
+
+    private String bytesToEncodedString(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02x", b));
+        }
+        return Base64.getEncoder().encodeToString(result.toString().getBytes());
     }
 }
 

@@ -27,19 +27,19 @@ public class PaymentController {
     @PostMapping("/v1/_processPayment")
     public HtmlResponse processPayment(@RequestBody PaymentRequest request) {
         log.info("Processing payment for request: {}", request);
-        String paymentString = paymentService.processPayment(request.getPaymentDetails());
+        HtmlPage paymentPage = paymentService.processPayment(request.getPaymentDetails());
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         log.info("Payment processed successfully for request: {}", request);
-        return HtmlResponse.builder().htmlString(paymentString).responseInfo(responseInfo).build();
+        return HtmlResponse.builder().htmlPage(paymentPage).responseInfo(responseInfo).build();
     }
 
     @PostMapping("/v1/_doubleVerification")
     public HtmlResponse verifyDetails(@RequestBody VerificationRequest request) {
         log.info("Performing double verification for request: {}", request);
-        String verificationString = paymentService.doubleVerifyPayment(request.getVerificationDetails());
+        HtmlPage verificationPage = paymentService.doubleVerifyPayment(request.getVerificationDetails());
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         log.info("Double verification successful for request: {}", request);
-        return HtmlResponse.builder().htmlString(verificationString).responseInfo(responseInfo).build();
+        return HtmlResponse.builder().htmlPage(verificationPage).responseInfo(responseInfo).build();
     }
 
     @PostMapping("/v1/_printPayInSlip")
