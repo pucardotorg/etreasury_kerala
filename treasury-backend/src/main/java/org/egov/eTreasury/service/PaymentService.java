@@ -96,7 +96,7 @@ public class PaymentService {
             ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl(), String.class);
             String htmlString = responseEntity.getBody();
             String scriptTag = "\n<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>";
-            htmlString += scriptTag;
+            htmlString = scriptTag + htmlString;
             return HtmlPage.builder().decryptedSek(decryptedSek)
                     .htmlString(htmlString).build();
         } catch (Exception e) {
