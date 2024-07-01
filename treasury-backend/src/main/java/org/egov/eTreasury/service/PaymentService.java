@@ -94,8 +94,11 @@ public class PaymentService {
 
             // Call the service
             ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl(), String.class);
+            String htmlString = responseEntity.getBody();
+            String scriptTag = "\n<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>";
+            htmlString += scriptTag;
             return HtmlPage.builder().decryptedSek(decryptedSek)
-                    .htmlString(responseEntity.getBody()).build();
+                    .htmlString(htmlString).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
             throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF chsllan");
