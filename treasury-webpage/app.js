@@ -29,8 +29,14 @@ app.post(`${contextPath}`, (req, res) => {
     const paymentStatus = returnParams.status;
 
     // Serve different HTML pages based on payment status
-    console.log('Reurn Params: ', returnParams);
+    console.log('Return Params: ', returnParams);
     console.log('Payment Status: ', paymentStatus);
+
+    storeInLocalStorage("status", paymentStatus);
+    storeInLocalStorage("rek", returnParams.rek);
+    storeInLocalStorage("data", returnParams.data);
+    storeInLocalStorage("hmac", returnParams.hmac);
+    storeInLocalStorage("authToken", returnParams.AuthToken);
 
     let htmlFile;
     if (paymentStatus == true || paymentStatus == 'true' || paymentStatus == 'Y' || paymentStatus == 'success') {
@@ -39,10 +45,36 @@ app.post(`${contextPath}`, (req, res) => {
         htmlFile = 'payment-failure.html';
     }
 
+    paymentCompletionEvent();
+
     // Send a response with the appropriate HTML file
     res.sendFile(path.join(__dirname, 'public', htmlFile));
 
 });
+
+function storeInLocalStorage(key, data) {
+    // Convert data to a string if it's not already
+    if (typeof data !== 'string') {
+      data = JSON.stringify(data);
+    }
+    
+    localStorage.setItem(key, data);
+    console.log(`Stored data with key "${key}" in local storage.`);
+}
+
+function paymentCompletionEvent() {
+    // Create a custom event object with payment status
+    const completionEvent = new CustomEvent('payment-process-completed');
+
+    // Dispatch the event to the parent window
+    window.opener.dispatchEvent(completionEvent);
+    
+    // Optionally close the popup window
+    setTimeout(() => {
+        window.close();
+      }, 15000); 
+}  
+  
 
 app.listen(port, () => {
     console.log(`Server running at ${externalHost}${contextPath}`);
