@@ -47,8 +47,6 @@ app.post(`${contextPath}`, (req, res) => {
         htmlFile = 'payment-failure.html';
     }
 
-    paymentCompletionEvent(dataToSend);
-
     // Send a response with the appropriate HTML file
     const htmlFilePath = path.join(__dirname, 'public', htmlFile);
     res.sendFile(htmlFilePath, (err) => {
