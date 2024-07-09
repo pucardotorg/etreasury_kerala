@@ -9,7 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 @Setter
 @Getter
-public class PaymentDetails {
+@Builder
+public class ChallanDetails {
 
     @JsonProperty("OFFICE_CODE")
     private String officeCode;
@@ -70,20 +71,6 @@ public class PaymentDetails {
 
     @JsonProperty("TSB_DATA")
     private List<TsbData> tsbData;
-}
-
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-class HeadDetails {
-
-    @JsonProperty("AMOUNT")
-    private String amount;
-
-    @JsonProperty("HEADID")
-    private String headId;
-
 }
 
 @Getter

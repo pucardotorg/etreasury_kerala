@@ -44,6 +44,9 @@ public class TransactionDetails {
     @JsonProperty("REMARKS")
     private String remarks;
 
+    @JsonProperty("REMARK_STATUS")
+    private String remarkStatus;
+
     @JsonProperty("PARTYNAME")
     private String partyName;
 

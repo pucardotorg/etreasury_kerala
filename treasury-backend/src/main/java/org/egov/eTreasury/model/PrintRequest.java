@@ -9,11 +9,11 @@ import org.egov.common.contract.request.RequestInfo;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VerificationRequest {
+public class PrintRequest {
 
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
 
-    @JsonProperty("VerificationDetails")
-    private VerificationDetails verificationDetails;
+    @JsonProperty("PrintDetails")
+    private PrintDetails printDetails;
 }

@@ -7,14 +7,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ReturnData {
-
+public class TreasuryResponse {
 
     private boolean status;
-
     private String rek;
-
     private String data;
-
     private String hmac;
 }

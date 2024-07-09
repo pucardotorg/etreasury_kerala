@@ -1,12 +1,21 @@
 package org.egov.eTreasury.service;
 
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.eTreasury.config.PaymentConfiguration;
+import org.egov.eTreasury.kafka.Producer;
 import org.egov.eTreasury.util.AuthUtil;
+import org.egov.eTreasury.util.CollectionsUtil;
 import org.egov.eTreasury.util.ETreasuryUtil;
 import org.egov.eTreasury.util.EncryptionUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import digit.models.coremodels.Payment;
+import digit.models.coremodels.PaymentDetail;
+import digit.models.coremodels.PaymentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.eTreasury.model.*;
+import org.egov.eTreasury.repository.AuthSekRepository;
+import org.egov.eTreasury.util.RefundUtil;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -16,10 +25,18 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -35,14 +52,42 @@ public class PaymentService {
 
     private final AuthUtil authUtil;
 
+    private final RefundUtil refundUtil;
+
+    private final Producer producer;
+
+    private final AuthSekRepository repository;
+
+    private final CollectionsUtil collectionsUtil;
+
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
-                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil, AuthUtil authUtil) {
+                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil, AuthUtil authUtil, 
+                          RefundUtil refundUtil, Producer producer, AuthSekRepository repository, 
+                          CollectionsUtil collectionsUtil) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
         this.encryptionUtil = encryptionUtil;
         this.authUtil = authUtil;
+        this.refundUtil = refundUtil;
+        this.producer = producer;
+        this.repository = repository;
+        this.collectionsUtil = collectionsUtil;
+    }
+
+    public ConnectionStatus verifyConnection() {
+        try {
+            ResponseEntity<ConnectionStatus> responseEntity = callService(null, null, config.getServerStatusUrl(), ConnectionStatus.class);
+            if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
+                return responseEntity.getBody();
+            } else {
+                throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Establishing a connection with ETreasury server failed: ", e);
+            throw new CustomException("ETREASURY_CONNECTION_ERROR", "Error occurred when establishing connection with ETreasury server");
+        }
     }
 
     private Map<String, String> authenticate() {
@@ -71,20 +116,30 @@ public class PaymentService {
             throw new CustomException("AUTHENTICATION_ERROR", "Error occurred during authentication");
         }
         return secretMap;
-        }
+    }
 
-    public HtmlPage processPayment(PaymentDetails paymentDetails) {
+    public HtmlPage processPayment(ChallanData challanData, RequestInfo requestInfo) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
 
             // Decrypt the SEK using the appKey
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+            AuthSek authSek = AuthSek.builder()
+                .authToken(secretMap.get("authToken"))
+                .tenantId(config.getEgovStateTenantId())
+                .decryptedSek(decryptedSek)
+                .billId(challanData.getBillId())
+                .taskNumber(challanData.getTaskNumber())
+                .totalDue(challanData.getTotalDue())
+                .paidBy(challanData.getPaidBy())
+                .sessionTime(System.currentTimeMillis()).build();
+            saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
-            paymentDetails.setServiceDeptCode(config.getServiceDeptCode());
-            paymentDetails.setOfficeCode(config.getOfficeCode());
-            String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(paymentDetails));
+            challanData.getChallanDetails().setServiceDeptCode(config.getServiceDeptCode());
+            challanData.getChallanDetails().setOfficeCode(config.getOfficeCode());
+            String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(challanData.getChallanDetails()));
 
             // Prepare headers
             Headers headers = new Headers();
@@ -105,7 +160,7 @@ public class PaymentService {
         }
     }
 
-    public HtmlPage doubleVerifyPayment(VerificationDetails verificationDetails) {
+    public HtmlPage doubleVerifyPayment(VerificationDetails verificationDetails, RequestInfo requestInfo) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -133,7 +188,7 @@ public class PaymentService {
         }
     }
 
-    public ByteArrayResource printPayInSlip(PrintDetails printDetails) {
+    public ByteArrayResource printPayInSlip(PrintDetails printDetails, RequestInfo requestInfo) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -165,7 +220,7 @@ public class PaymentService {
         }
     }
 
-    public TransactionDetails fetchTransactionDetails(TransactionDetails transactionDetails) {
+    public TransactionDetails fetchTransactionDetails(TransactionDetails transactionDetails, RequestInfo requestInfo) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -192,6 +247,76 @@ public class PaymentService {
         }
     }
 
+    public RefundData processRefund(RefundDetails refundDetails, RequestInfo requestInfo) {
+        try {
+            // Authenticate and get secret map
+            Map<String, String> secretMap = authenticate();
+
+            // Decrypt the SEK using the appKey
+            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+
+            // Prepare the request body
+            String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundDetails));
+
+            // Call the service
+            ResponseEntity<TreasuryResponse> responseEntity = refundUtil.callRefundService(config.getClientId(), 
+            secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
+            TreasuryResponse response = responseEntity.getBody();
+            String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
+            String decryptedData = encryptionUtil.decryptAESForResponse(response.getData(), decryptedRek);
+
+            return objectMapper.convertValue(decryptedData, RefundData.class);
+        } catch (Exception e) {
+            log.error("Refund Request failed: ", e);
+            throw new CustomException("REFUND_REQUEST_ERROR", "Error occurred during  refund request");
+        }
+    }
+
+    public RefundData checkRefundStatus(RefundStatus refundStatus, RequestInfo requestInfo) {
+        try {
+            // Authenticate and get secret map
+            Map<String, String> secretMap = authenticate();
+
+            // Decrypt the SEK using the appKey
+            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+
+            // Prepare the request body
+            String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundStatus));
+
+            // Call the service
+            ResponseEntity<TreasuryResponse> responseEntity = refundUtil.callRefundService(config.getClientId(), 
+            secretMap.get("authToken"), postBody, config.getRefundStatusUrl(), TreasuryResponse.class);
+            TreasuryResponse response = responseEntity.getBody();
+            String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
+            String decryptedData = encryptionUtil.decryptAESForResponse(response.getData(), decryptedRek);
+
+            return objectMapper.convertValue(decryptedData, RefundData.class);
+        } catch (Exception e) {
+            log.error("Refund Request failed: ", e);
+            throw new CustomException("REFUND_REQUEST_ERROR", "Error occurred during  refund request");
+        }
+    }
+
+    public void decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
+        try {
+            Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
+            if (optionalAuthSek.isPresent()) {
+                String decryptedSek = optionalAuthSek.get().getDecryptedSek();
+                String decryptedRek = encryptionUtil.decryptAESForResponse(treasuryParams.getRek(), decryptedSek);
+                String decryptedData = encryptionUtil.decryptAESForResponse(treasuryParams.getData(), decryptedRek);
+                TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
+                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo);
+            }
+        } catch (Exception e) {
+            log.error("Decrypt Treasury Response failed: ", e);
+            throw new CustomException("TREASURY_RESPONSE_ERROR", "Error occurred during decrypting Treasury Response");
+        }
+    }
+
+    private void saveAuthTokenAndSek(RequestInfo requestInfo, AuthSek authSek) {
+        AuthSekRequest request = new AuthSekRequest(requestInfo, authSek);
+        producer.push("save-auth-sek", request);
+    }
 
     private <T> ResponseEntity<T> callService(String headersData, String postBody, String url, Class<T> responseType) {
         return treasuryUtil.callService(headersData, postBody, url, responseType);
@@ -222,4 +347,55 @@ public class PaymentService {
         }
     }
 
+    private String generatePostBodyForRefund(String decryptedSek, String jsonData) {
+        try {
+            // Convert SEK to AES key
+            SecretKey aesKey = new SecretKeySpec(decryptedSek.getBytes(StandardCharsets.UTF_8), "AES");
+
+            // Initialize AES cipher in encryption mode
+            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
+
+            // Encrypt JSON data
+            byte[] encryptedDataBytes = aesCipher.doFinal(jsonData.getBytes(StandardCharsets.UTF_8));
+            String encryptedData = Base64.getEncoder().encodeToString(encryptedDataBytes);
+
+            // Generate HMAC using JSON data and SEK
+            String hmac = encryptionUtil.generateHMAC(jsonData, decryptedSek);
+
+            // Create PostBody object and convert to JSON string
+            RefundPostBody refundPostBody = new RefundPostBody(hmac, encryptedData);
+            return objectMapper.writeValueAsString(refundPostBody);
+        } catch (Exception e) {
+            log.error("Error during post body generation: ", e);
+            throw new CustomException("POST_BODY_GENERATION_ERROR", "Error occurred generating post body");
+        }
+    }
+
+    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo) {
+        PaymentDetail paymentDetail = PaymentDetail.builder()
+            .billId(authSek.getBillId())
+            .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
+            .businessService(config.getCollectionsBusinessService()).build();
+        Payment payment = Payment.builder()
+            .tenantId(config.getEgovStateTenantId())
+            .paymentDetails(Collections.singletonList(paymentDetail))
+            .payerName(transactionDetails.getPartyName())
+            .paidBy(authSek.getPaidBy())
+            .mobileNumber(authSek.getMobileNumber())
+            .transactionNumber(transactionDetails.getGrn())
+            .transactionDate(convertTimestampToMillis(transactionDetails.getChallanTimestamp()))
+            .instrumentNumber(transactionDetails.getBankRefNo())
+            .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
+            .build();
+        PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
+        collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
+    }
+
+    private Long convertTimestampToMillis(String timestampStr) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime dateTime = LocalDateTime.parse(timestampStr, formatter);
+        Instant instant = dateTime.toInstant(ZoneOffset.UTC);
+        return instant.toEpochMilli();
+  }
 }
