@@ -36,6 +36,9 @@ public class PaymentConfiguration {
     @Value("${dept-reference-id}")
     private String deptReferenceId;
 
+    @Value("${treasury-server-status-url}")
+    private String serverStatusUrl;
+
     @Value("${treasury-auth-url}")
     private String authUrl;
 
@@ -48,6 +51,21 @@ public class PaymentConfiguration {
     @Value("${treasury-print-slip-url}")
     private String printSlipUrl;
 
-    @Value("${treasury-transaction-details-url")
+    @Value("${treasury-transaction-details-url}")
     private String transactionDetailsUrl;
+
+    @Value("${treasury-refund-request-url}")
+    private String refundRequestUrl;
+
+    @Value("${treasury-refund-status-url}")
+    private String refundStatusUrl;
+
+    @Value("${egov.collectionservice.business.service}")
+    private String collectionsBusinessService;
+
+    @Value("${egov.collectionservice.host}")
+    private String collectionServiceHost;
+    
+    @Value("${egov.collectionservice.payment.create}")
+    private String collectionsPaymentCreatePath;
 }

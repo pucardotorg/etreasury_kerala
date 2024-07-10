@@ -4,6 +4,8 @@ import org.egov.eTreasury.model.*;
 import org.egov.eTreasury.service.PaymentService;
 import org.egov.eTreasury.util.ResponseInfoFactory;
 import lombok.extern.slf4j.Slf4j;
+
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -24,10 +26,19 @@ public class PaymentController {
         this.responseInfoFactory = responseInfoFactory;
     }
 
-    @PostMapping("/v1/_processPayment")
-    public HtmlResponse processPayment(@RequestBody PaymentRequest request) {
+    @PostMapping("/v1/_verifyConnection")
+    public ConnectionResponse verifyServerConnection(@RequestBody RequestInfo request) {
+        log.info("Verifying Server Connection for request: {}", request);
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request, true);
+        ConnectionStatus connectionStatus = paymentService.verifyConnection();
+        log.info("Verified Server Connection for request: {}", request);
+        return ConnectionResponse.builder().responseInfo(responseInfo).connectionStatus(connectionStatus).build();
+    }
+
+    @PostMapping("/v1/_processChallan")
+    public HtmlResponse processPayment(@RequestBody ChallanRequest request) {
         log.info("Processing payment for request: {}", request);
-        HtmlPage paymentPage = paymentService.processPayment(request.getPaymentDetails());
+        HtmlPage paymentPage = paymentService.processPayment(request.getChallanData(), request.getRequestInfo());
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         log.info("Payment processed successfully for request: {}", request);
         return HtmlResponse.builder().htmlPage(paymentPage).responseInfo(responseInfo).build();
@@ -36,29 +47,56 @@ public class PaymentController {
     @PostMapping("/v1/_doubleVerification")
     public HtmlResponse verifyDetails(@RequestBody VerificationRequest request) {
         log.info("Performing double verification for request: {}", request);
-        HtmlPage verificationPage = paymentService.doubleVerifyPayment(request.getVerificationDetails());
+        HtmlPage verificationPage = paymentService.doubleVerifyPayment(request.getVerificationDetails(), request.getRequestInfo());
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         log.info("Double verification successful for request: {}", request);
         return HtmlResponse.builder().htmlPage(verificationPage).responseInfo(responseInfo).build();
     }
 
     @PostMapping("/v1/_printPayInSlip")
-    public ResponseEntity<?> printPayInSlip(@RequestBody PrintDetails printDetails) {
-        log.info("Printing pay-in slip for details: {}", printDetails);
-        ByteArrayResource resource = paymentService.printPayInSlip(printDetails);
-        log.info("Pay-in slip printed successfully for details: {}", printDetails);
+    public ResponseEntity<?> printPayInSlip(@RequestBody PrintRequest request) {
+        log.info("Printing pay-in slip for details: {}", request);
+        ByteArrayResource resource = paymentService.printPayInSlip(request.getPrintDetails(), request.getRequestInfo());
+        log.info("Pay-in slip printed successfully for details: {}", request);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + "Application-" + printDetails.getHcinNo() + ".pdf" + "\"")
+                        "attachment; filename=\"" + "Application-" + request.getPrintDetails().getHcinNo() + ".pdf" + "\"")
                 .header(HttpHeaders.CONTENT_TYPE, "application/pdf").body(resource);
     }
 
     @PostMapping("/v1/_transactionDetails")
     public TransactionResponse processTransaction(@RequestBody TransactionRequest request) {
         log.info("Fetching transaction details for request: {}", request);
-        TransactionDetails transactionDetails = paymentService.fetchTransactionDetails(request.getTransactionDetails());
+        TransactionDetails transactionDetails = paymentService.fetchTransactionDetails(request.getTransactionDetails(), request.getRequestInfo());
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         log.info("Transaction details fetched successfully for request: {}", request);
         return TransactionResponse.builder().transactionDetails(transactionDetails).responseInfo(responseInfo).build();
+    }
+
+    @PostMapping("/v1/_refundPayment")
+    public RefundResponse processRefundPayment(@RequestBody RefundRequest request) {
+        log.info("Processing refund for request: {}", request);
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        RefundData refundData = paymentService.processRefund(request.getRefundDetails(), request.getRequestInfo());
+        log.info("Refund processed successfully for request: {}", request);
+        return RefundResponse.builder().responseInfo(responseInfo).refundData(refundData).build();
+    }
+
+    @PostMapping("/v1/_refundStatus")
+    public RefundResponse checkRefundStatus(@RequestBody RefundStatusRequest request) {
+        log.info("Verifying refund status for request: {}", request);
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        RefundData refundData = paymentService.checkRefundStatus(request.getRefundStatus(), request.getRequestInfo());
+        log.info("Verified Refund Status successfully for request: {}", request);
+        return RefundResponse.builder().responseInfo(responseInfo).refundData(refundData).build();
+    }
+
+    @PostMapping("/v1/_decryptTreasuryResponse")
+    public ResponseEntity<ResponseInfo> decryptTreasuryResponse(@RequestBody TreasuryRequest request) {
+        log.info("Decrypting Treasury Response for request: {}", request);
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        paymentService.decryptAndProcessTreasuryPayload(request.getTreasuryParams(), request.getRequestInfo());
+        log.info("Decrypted Treasury Response successfully for request: {}", request);
+        return ResponseEntity.ok().body(responseInfo);
     }
 }

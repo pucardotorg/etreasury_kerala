@@ -7,16 +7,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.egov.common.contract.request.RequestInfo;
 
-@Getter
-@Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class ReturnRequest {
-
+@AllArgsConstructor
+@Setter
+@Getter
+public class RefundStatusRequest {
 
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
 
-    @JsonProperty("ReturnData")
-    private ReturnData returnData;
+    @JsonProperty("RefundStatus")
+    private RefundStatus refundStatus;
 }
