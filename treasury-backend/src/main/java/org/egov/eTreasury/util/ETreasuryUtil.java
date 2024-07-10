@@ -11,7 +11,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -27,7 +29,10 @@ public class ETreasuryUtil {
     public <T> ResponseEntity<T> callService(String inputHeaders, String inputBody, String url, Class<T> responseType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setAccept(Collections.singletonList(MediaType.TEXT_HTML));
+        List<MediaType> mediaTypeList = new ArrayList<>();
+        mediaTypeList.add(MediaType.APPLICATION_JSON);
+        mediaTypeList.add(MediaType.TEXT_HTML);
+        headers.setAccept(mediaTypeList);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("input_headers", inputHeaders);
