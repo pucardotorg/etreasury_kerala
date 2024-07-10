@@ -6,7 +6,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -24,12 +23,12 @@ public class ConnectionUtil {
 
     public <T> ResponseEntity<T> callService(String url, Class<T> responseType) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
         List<MediaType> mediaTypeList = new ArrayList<>();
         mediaTypeList.add(MediaType.APPLICATION_JSON);
         headers.setAccept(mediaTypeList);
 
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(null, headers);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
         return restTemplate.postForEntity(url, requestEntity, responseType);
     }
 }
