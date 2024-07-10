@@ -1,43 +1,34 @@
 package org.egov.eTreasury.util;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-@Component
-@Slf4j
-public class ETreasuryUtil {
+public class ConnectionUtil {
 
     private final RestTemplate restTemplate;
 
     @Autowired
-    public ETreasuryUtil(RestTemplate restTemplate) {
+    public ConnectionUtil(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
-    public <T> ResponseEntity<T> callService(String inputHeaders, String inputBody, String url, Class<T> responseType) {
+    public <T> ResponseEntity<T> callService(String url, Class<T> responseType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         List<MediaType> mediaTypeList = new ArrayList<>();
-        mediaTypeList.add(MediaType.TEXT_HTML);
+        mediaTypeList.add(MediaType.APPLICATION_JSON);
         headers.setAccept(mediaTypeList);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("input_headers", inputHeaders);
-        body.add("input_data", inputBody);
-
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(null, headers);
         return restTemplate.postForEntity(url, requestEntity, responseType);
     }
 }

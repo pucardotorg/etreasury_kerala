@@ -3,10 +3,7 @@ package org.egov.eTreasury.service;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.eTreasury.config.PaymentConfiguration;
 import org.egov.eTreasury.kafka.Producer;
-import org.egov.eTreasury.util.AuthUtil;
-import org.egov.eTreasury.util.CollectionsUtil;
-import org.egov.eTreasury.util.ETreasuryUtil;
-import org.egov.eTreasury.util.EncryptionUtil;
+import org.egov.eTreasury.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import digit.models.coremodels.Payment;
@@ -15,7 +12,6 @@ import digit.models.coremodels.PaymentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.eTreasury.model.*;
 import org.egov.eTreasury.repository.AuthSekRepository;
-import org.egov.eTreasury.util.RefundUtil;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -60,11 +56,13 @@ public class PaymentService {
 
     private final CollectionsUtil collectionsUtil;
 
+    private final ConnectionUtil connectionUtil;
+
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
-                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil, AuthUtil authUtil, 
-                          RefundUtil refundUtil, Producer producer, AuthSekRepository repository, 
-                          CollectionsUtil collectionsUtil) {
+                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil, AuthUtil authUtil,
+                          RefundUtil refundUtil, Producer producer, AuthSekRepository repository,
+                          CollectionsUtil collectionsUtil, ConnectionUtil connectionUtil) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
@@ -74,11 +72,12 @@ public class PaymentService {
         this.producer = producer;
         this.repository = repository;
         this.collectionsUtil = collectionsUtil;
+        this.connectionUtil = connectionUtil;
     }
 
     public ConnectionStatus verifyConnection() {
         try {
-            ResponseEntity<ConnectionStatus> responseEntity = callService(null, null, config.getServerStatusUrl(), ConnectionStatus.class);
+            ResponseEntity<ConnectionStatus> responseEntity = connectionUtil.callService(config.getServerStatusUrl(), ConnectionStatus.class);
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 return responseEntity.getBody();
             } else {
