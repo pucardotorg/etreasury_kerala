@@ -24,7 +24,9 @@ app.use(express.static("public"));
 
 app.post(`${contextPath}`, async (req, res) => {
   try {
-    const returnParams = req.body.TreasuryParams;
+
+    returnParams = JSON.parse(req.body.RETURN_PARAMS);
+    returnHeader = JSON.parse(req.body.RETURN_HEADER);
     const paymentStatus = returnParams.status;
 
     const dataToSend = {
@@ -32,7 +34,7 @@ app.post(`${contextPath}`, async (req, res) => {
       rek: returnParams.rek,
       data: returnParams.data,
       hmac: returnParams.hmac,
-      authToken: returnParams.authToken
+      authToken: returnParams.AuthToken
     };
 
     let htmlFile;
