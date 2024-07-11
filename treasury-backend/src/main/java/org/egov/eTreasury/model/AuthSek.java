@@ -17,7 +17,8 @@ public class AuthSek {
     private String tenantId;
     private String decryptedSek;
     private String billId;
-    private String taskNumber;
+    private String businessService;
+    private String serviceNumber;
     private double totalDue;
     private String mobileNumber;
     private String paidBy;

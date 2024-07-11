@@ -60,9 +60,6 @@ public class PaymentConfiguration {
     @Value("${treasury-refund-status-url}")
     private String refundStatusUrl;
 
-    @Value("${egov.collectionservice.business.service}")
-    private String collectionsBusinessService;
-
     @Value("${egov.collectionservice.host}")
     private String collectionServiceHost;
     
