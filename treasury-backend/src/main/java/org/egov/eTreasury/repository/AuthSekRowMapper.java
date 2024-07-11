@@ -17,7 +17,8 @@ public class AuthSekRowMapper implements RowMapper<AuthSek> {
         authSek.setTenantId(rs.getString("tenant_id"));
         authSek.setDecryptedSek(rs.getString("decrypted_sek"));
         authSek.setBillId(rs.getString("bill_id"));
-        authSek.setTaskNumber(rs.getString("task_number"));
+        authSek.setBusinessService(rs.getString("business_service"));
+        authSek.setServiceNumber(rs.getString("service_number"));
         authSek.setTotalDue(rs.getDouble("total_due"));
         authSek.setMobileNumber(rs.getString("mobile_number"));
         authSek.setPaidBy(rs.getString("paid_by"));

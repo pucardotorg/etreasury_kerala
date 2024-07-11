@@ -130,7 +130,8 @@ public class PaymentService {
                 .tenantId(config.getEgovStateTenantId())
                 .decryptedSek(decryptedSek)
                 .billId(challanData.getBillId())
-                .taskNumber(challanData.getTaskNumber())
+                .businessService(challanData.getBusinessService())
+                .serviceNumber(challanData.getServiceNumber())
                 .totalDue(challanData.getTotalDue())
                 .paidBy(challanData.getPaidBy())
                 .sessionTime(System.currentTimeMillis()).build();
@@ -374,7 +375,7 @@ public class PaymentService {
         PaymentDetail paymentDetail = PaymentDetail.builder()
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
-            .businessService(config.getCollectionsBusinessService()).build();
+            .businessService(authSek.getBusinessService()).build();
         Payment payment = Payment.builder()
             .tenantId(config.getEgovStateTenantId())
             .paymentDetails(Collections.singletonList(paymentDetail))
