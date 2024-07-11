@@ -127,7 +127,6 @@ public class PaymentService {
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
             AuthSek authSek = AuthSek.builder()
                 .authToken(secretMap.get("authToken"))
-                .tenantId(config.getEgovStateTenantId())
                 .decryptedSek(decryptedSek)
                 .billId(challanData.getBillId())
                 .businessService(challanData.getBusinessService())

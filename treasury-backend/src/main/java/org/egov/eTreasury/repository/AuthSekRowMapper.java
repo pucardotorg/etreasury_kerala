@@ -14,7 +14,6 @@ public class AuthSekRowMapper implements RowMapper<AuthSek> {
     public AuthSek mapRow(ResultSet rs, int rowNum) throws SQLException {
         AuthSek authSek = new AuthSek();
         authSek.setAuthToken(rs.getString("auth_token"));
-        authSek.setTenantId(rs.getString("tenant_id"));
         authSek.setDecryptedSek(rs.getString("decrypted_sek"));
         authSek.setBillId(rs.getString("bill_id"));
         authSek.setBusinessService(rs.getString("business_service"));

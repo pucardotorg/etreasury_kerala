@@ -14,7 +14,6 @@ import lombok.Setter;
 public class AuthSek {
 
     private String authToken;
-    private String tenantId;
     private String decryptedSek;
     private String billId;
     private String businessService;
