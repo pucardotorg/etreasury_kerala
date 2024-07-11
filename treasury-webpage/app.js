@@ -1,6 +1,5 @@
 const express = require("express");
 const path = require("path");
-const fetch = require("node-fetch"); // Ensure you have installed node-fetch or a similar library
 
 const app = express();
 const port = 8080;
