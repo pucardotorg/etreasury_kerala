@@ -15,6 +15,7 @@ import org.egov.eTreasury.repository.AuthSekRepository;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -147,12 +148,11 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl(), String.class);
+            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl(), String.class, MediaType.TEXT_HTML);
             String htmlString = responseEntity.getBody();
             String scriptTag = "\n<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>";
             htmlString = scriptTag + htmlString;
-            return HtmlPage.builder().decryptedSek(decryptedSek)
-                    .htmlString(htmlString).build();
+            return HtmlPage.builder().htmlString(htmlString).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
             throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF chsllan");
@@ -179,9 +179,9 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getDoubleVerificationUrl(), String.class);
-            return HtmlPage.builder().decryptedSek(decryptedSek)
-                    .htmlString(responseEntity.getBody()).build();        } catch (Exception e) {
+            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getDoubleVerificationUrl(), String.class, MediaType.TEXT_HTML);
+            return HtmlPage.builder().htmlString(responseEntity.getBody()).build();
+        } catch (Exception e) {
             log.error("Double verification Error: ", e);
             throw new CustomException("DOUBLE_VERIFICATION_ERROR", "Error occurred during double verification");
         }
@@ -205,7 +205,7 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<byte[]> responseEntity = callService(headersData, postBody, config.getPrintSlipUrl(), byte[].class);
+            ResponseEntity<byte[]> responseEntity = callService(headersData, postBody, config.getPrintSlipUrl(), byte[].class, MediaType.MULTIPART_FORM_DATA);
 
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
@@ -238,7 +238,7 @@ public class PaymentService {
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service
-            ResponseEntity<TransactionDetails> responseEntity = callService(headersData, postBody, config.getTransactionDetailsUrl(), TransactionDetails.class);
+            ResponseEntity<TransactionDetails> responseEntity = callService(headersData, postBody, config.getTransactionDetailsUrl(), TransactionDetails.class, MediaType.APPLICATION_JSON);
             return objectMapper.convertValue(responseEntity.getBody(), TransactionDetails.class);
         } catch (Exception e) {
             log.error("Transaction details retrieval failed: ", e);
@@ -258,8 +258,7 @@ public class PaymentService {
             String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundDetails));
 
             // Call the service
-            ResponseEntity<TreasuryResponse> responseEntity = refundUtil.callRefundService(config.getClientId(), 
-            secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
+            ResponseEntity<TreasuryResponse> responseEntity = refundUtil.callRefundService(config.getClientId(), secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
             TreasuryResponse response = responseEntity.getBody();
             String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
             String decryptedData = encryptionUtil.decryptAESForResponse(response.getData(), decryptedRek);
@@ -317,8 +316,8 @@ public class PaymentService {
         producer.push("save-auth-sek", request);
     }
 
-    private <T> ResponseEntity<T> callService(String headersData, String postBody, String url, Class<T> responseType) {
-        return treasuryUtil.callService(headersData, postBody, url, responseType);
+    private <T> ResponseEntity<T> callService(String headersData, String postBody, String url, Class<T> responseType, MediaType mediaType) {
+        return treasuryUtil.callService(headersData, postBody, url, responseType, mediaType);
     }
 
     private String generatePostBody(String decryptedSek, String jsonData) {

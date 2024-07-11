@@ -26,12 +26,10 @@ public class ETreasuryUtil {
         this.restTemplate = restTemplate;
     }
 
-    public <T> ResponseEntity<T> callService(String inputHeaders, String inputBody, String url, Class<T> responseType) {
+    public <T> ResponseEntity<T> callService(String inputHeaders, String inputBody, String url, Class<T> responseType, MediaType mediaType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        List<MediaType> mediaTypeList = new ArrayList<>();
-        mediaTypeList.add(MediaType.TEXT_HTML);
-        headers.setAccept(mediaTypeList);
+        headers.setAccept(Collections.singletonList(mediaType));
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("input_headers", inputHeaders);

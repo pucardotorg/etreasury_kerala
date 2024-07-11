@@ -10,10 +10,6 @@ import lombok.*;
 @Builder
 public class HtmlPage {
 
-
-    @JsonProperty("decryptedSek")
-    private String decryptedSek;
-
     @JsonProperty("htmlString")
     private String htmlString;
 }
