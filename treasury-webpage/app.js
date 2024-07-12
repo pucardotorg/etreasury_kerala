@@ -28,13 +28,33 @@ app.post(`${contextPath}`, async (req, res) => {
     const returnHeader = JSON.parse(req.body.RETURN_HEADER);
     const paymentStatus = returnParams.status;
 
-    const dataToSend = {
+    const requestInfo = {
+      apiId: "string",
+      ver: "string",
+      ts: 0,
+      action: "string",
+      did: "string",
+      key: "string",
+      msgId: "string",
+      requesterId: "string",
+      authToken: "06aabaa6-3431-41eb-a97c-ab8265289d91",
+      userInfo: {
+        uuid: "435f92c-e22a-4a2e-8a5e-3f03baa46cb1"
+      }
+    };    
+
+    const treasuryParams = {
       status: paymentStatus,
       rek: returnParams.rek,
       data: returnParams.data,
       hmac: returnParams.hmac,
       authToken: returnHeader.AuthToken
     };
+
+    const dataToSend = {
+      RequestInfo: requestInfo, 
+      TreasuryParams: treasuryParams
+    }
 
     // Send data to the backend service
     const backendResponse = await axios.post(`${serverUrl}/payment/v1/_decryptTreasuryResponse`, dataToSend, {
