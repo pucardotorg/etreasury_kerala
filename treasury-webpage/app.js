@@ -1,13 +1,12 @@
 const express = require("express");
 const path = require("path");
-const bodyParser = require('body-parser');
-const fs = require("fs");
+const axios = require("axios");
 
 const app = express();
 const port = 8080;
 const externalHost = process.env.EXTERNAL_HOST || "http://localhost:8088";
 const contextPath = "/epayments";
-const serverUrl = process.env.SERVER_URL || "http://localhost:8090";
+const serverUrl = process.env.SERVER_URL || "http://egov-etreasury:8080";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,12 +36,22 @@ app.post(`${contextPath}`, async (req, res) => {
       authToken: returnHeader.AuthToken
     };
 
+    // Send data to the backend service
+    const backendResponse = await axios.post(`${serverUrl}/payment/v1/_decryptTreasuryResponse`, dataToSend, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    // Log the backend response
+    console.log("Backend response:", backendResponse.data);
+
     let htmlFile;
     if (
-      paymentStatus == true ||
-      paymentStatus == "true" ||
-      paymentStatus == "Y" ||
-      paymentStatus == "success"
+      paymentStatus === true ||
+      paymentStatus === "true" ||
+      paymentStatus === "Y" ||
+      paymentStatus === "success"
     ) {
       htmlFile = "payment-success.html";
     } else {
@@ -50,22 +59,7 @@ app.post(`${contextPath}`, async (req, res) => {
     }
 
     const htmlFilePath = path.join(__dirname, "public", htmlFile);
-
-    // Read the HTML file, inject the script, and send the modified content
-    fs.readFile(htmlFilePath, "utf8", (err, htmlContent) => {
-      if (err) {
-        res.status(500).send("Internal Server Error");
-        return;
-      }
-
-      const scriptTag = `<script>
-        window.receivedData = ${JSON.stringify(dataToSend)};
-      </script>`;
-
-      const modifiedHtmlContent = htmlContent.replace("</body>", `${scriptTag}</body>`);
-      res.send(modifiedHtmlContent);
-    });
-
+    res.sendFile(htmlFilePath);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send("Internal Server Error");
