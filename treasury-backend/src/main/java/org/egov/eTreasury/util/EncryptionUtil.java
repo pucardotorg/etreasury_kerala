@@ -85,8 +85,8 @@ public class EncryptionUtil {
         return Base64.getEncoder().encodeToString(result.toString().getBytes());
     }
 
-        public String decryptAESForResponse(String encryptedData, String key) throws Exception {
-        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
+    public String decryptResponse(String encryptedData, String key) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));

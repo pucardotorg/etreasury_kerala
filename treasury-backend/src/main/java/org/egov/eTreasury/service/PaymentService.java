@@ -267,8 +267,8 @@ public class PaymentService {
             // Call the service
             ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(), secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
             TreasuryResponse response = responseEntity.getBody();
-            String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
-            String decryptedData = encryptionUtil.decryptAESForResponse(response.getData(), decryptedRek);
+            String decryptedRek = encryptionUtil.decryptResponse(response.getRek(), decryptedSek);
+            String decryptedData = encryptionUtil.decryptResponse(response.getData(), decryptedRek);
 
             return objectMapper.convertValue(decryptedData, RefundData.class);
         } catch (Exception e) {
@@ -292,8 +292,8 @@ public class PaymentService {
             ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(),
             secretMap.get("authToken"), postBody, config.getRefundStatusUrl(), TreasuryResponse.class);
             TreasuryResponse response = responseEntity.getBody();
-            String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
-            String decryptedData = encryptionUtil.decryptAESForResponse(response.getData(), decryptedRek);
+            String decryptedRek = encryptionUtil.decryptResponse(response.getRek(), decryptedSek);
+            String decryptedData = encryptionUtil.decryptResponse(response.getData(), decryptedRek);
 
             return objectMapper.convertValue(decryptedData, RefundData.class);
         } catch (Exception e) {
@@ -307,8 +307,8 @@ public class PaymentService {
             Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
             if (optionalAuthSek.isPresent()) {
                 String decryptedSek = optionalAuthSek.get().getDecryptedSek();
-                String decryptedRek = encryptionUtil.decryptAESForResponse(treasuryParams.getRek(), decryptedSek);
-                String decryptedData = encryptionUtil.decryptAESForResponse(treasuryParams.getData(), decryptedRek);
+                String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
+                String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
                 updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo);
             }

@@ -16,7 +16,7 @@ public class AuthSekQueryBuilder {
         StringBuilder query = new StringBuilder(BASE_QUERY);
         query.append(FROM_TABLES);
 
-        if (!StringUtils.hasText(authToken)) {
+        if (StringUtils.hasText(authToken)) {
             addClauseIfRequired(query, preparedStmtList);
             query.append(" auth_token = ? ");
             preparedStmtList.add(authToken);
