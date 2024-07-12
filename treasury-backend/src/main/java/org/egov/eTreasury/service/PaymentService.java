@@ -26,15 +26,10 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -381,6 +376,7 @@ public class PaymentService {
         PaymentDetail paymentDetail = PaymentDetail.builder()
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
+            .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
             .businessService(authSek.getBusinessService()).build();
         Payment payment = Payment.builder()
             .tenantId(config.getEgovStateTenantId())
@@ -392,15 +388,29 @@ public class PaymentService {
             .transactionDate(convertTimestampToMillis(transactionDetails.getChallanTimestamp()))
             .instrumentNumber(transactionDetails.getBankRefNo())
             .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
+            .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
             .build();
         PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
         collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
     }
 
     private Long convertTimestampToMillis(String timestampStr) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
-        LocalDateTime dateTime = LocalDateTime.parse(timestampStr, formatter);
-        Instant instant = dateTime.toInstant(ZoneOffset.UTC);
-        return instant.toEpochMilli();
+        List<DateTimeFormatter> formatters = new ArrayList<>();
+        formatters.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"));
+        formatters.add(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH.mm.ss.SSSSS"));
+        LocalDateTime dateTime = null;
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                dateTime = LocalDateTime.parse(timestampStr, formatter);
+                break;
+            } catch (Exception e) {
+                // Try next formatter if parsing fails
+            }
+        }
+        if (dateTime != null) {
+            return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+        } else {
+            return null;
+        }
     }
 }
