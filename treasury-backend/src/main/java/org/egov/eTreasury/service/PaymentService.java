@@ -398,9 +398,9 @@ public class PaymentService {
     }
 
     private Long convertTimestampToMillis(String timestampStr) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
         LocalDateTime dateTime = LocalDateTime.parse(timestampStr, formatter);
         Instant instant = dateTime.toInstant(ZoneOffset.UTC);
         return instant.toEpochMilli();
-  }
+    }
 }
