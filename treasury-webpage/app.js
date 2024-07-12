@@ -55,16 +55,19 @@ app.post(`${contextPath}`, async (req, res) => {
       RequestInfo: requestInfo, 
       TreasuryParams: treasuryParams
     }
-
     // Send data to the backend service
-    const backendResponse = await axios.post(`${serverUrl}/etreasury/payment/v1/_decryptTreasuryResponse`, dataToSend, {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    // Log the backend response
-    console.log("Backend response:", backendResponse.data);
+    let backendResponse;
+    try {
+      backendResponse = await axios.post(`${serverUrl}/etreasury/payment/v1/_decryptTreasuryResponse`, dataToSend, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      console.log("Backend response:", backendResponse.data);
+    } catch (backendError) {
+      console.error("Backend request error:", backendError);
+      backendResponse = null;
+    }
 
     let htmlFile;
     if (
