@@ -125,6 +125,7 @@ public class PaymentService {
                 .billId(challanData.getBillId())
                 .businessService(challanData.getBusinessService())
                 .serviceNumber(challanData.getServiceNumber())
+                .mobileNumber(challanData.getMobileNumber())
                 .totalDue(challanData.getTotalDue())
                 .paidBy(challanData.getPaidBy())
                 .sessionTime(System.currentTimeMillis()).build();
