@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require('body-parser');
+const fs = require("fs");
 
 const app = express();
 const port = 8080;
@@ -24,9 +25,8 @@ app.use(express.static("public"));
 
 app.post(`${contextPath}`, async (req, res) => {
   try {
-
-    returnParams = JSON.parse(req.body.RETURN_PARAMS);
-    returnHeader = JSON.parse(req.body.RETURN_HEADER);
+    const returnParams = JSON.parse(req.body.RETURN_PARAMS);
+    const returnHeader = JSON.parse(req.body.RETURN_HEADER);
     const paymentStatus = returnParams.status;
 
     const dataToSend = {
@@ -34,7 +34,7 @@ app.post(`${contextPath}`, async (req, res) => {
       rek: returnParams.rek,
       data: returnParams.data,
       hmac: returnParams.hmac,
-      authToken: returnParams.AuthToken
+      authToken: returnHeader.AuthToken
     };
 
     let htmlFile;
@@ -49,22 +49,23 @@ app.post(`${contextPath}`, async (req, res) => {
       htmlFile = "payment-failure.html";
     }
 
-    // Send a response with the appropriate HTML file
     const htmlFilePath = path.join(__dirname, "public", htmlFile);
-    res.sendFile(htmlFilePath, (err) => {
+
+    // Read the HTML file, inject the script, and send the modified content
+    fs.readFile(htmlFilePath, "utf8", (err, htmlContent) => {
       if (err) {
-        res.status(500).send(err);
-      } else {
-        // Inject the data into the client-side script
-        res.write(`
-                    <script>
-                        window.receivedData = ${JSON.stringify(dataToSend)};
-                    </script>
-                    <script src="main.js"></script>
-                `);
-        res.end();
+        res.status(500).send("Internal Server Error");
+        return;
       }
+
+      const scriptTag = `<script>
+        window.receivedData = ${JSON.stringify(dataToSend)};
+      </script>`;
+
+      const modifiedHtmlContent = htmlContent.replace("</body>", `${scriptTag}</body>`);
+      res.send(modifiedHtmlContent);
     });
+
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send("Internal Server Error");
