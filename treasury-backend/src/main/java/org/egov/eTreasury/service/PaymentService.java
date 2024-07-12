@@ -389,6 +389,7 @@ public class PaymentService {
             .instrumentNumber(transactionDetails.getBankRefNo())
             .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
+            .paymentMode("CARD")
             .build();
         PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
         collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
