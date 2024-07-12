@@ -57,7 +57,7 @@ app.post(`${contextPath}`, async (req, res) => {
     }
 
     // Send data to the backend service
-    const backendResponse = await axios.post(`${serverUrl}/payment/v1/_decryptTreasuryResponse`, dataToSend, {
+    const backendResponse = await axios.post(`${serverUrl}/etreasury/payment/v1/_decryptTreasuryResponse`, dataToSend, {
       headers: {
         "Content-Type": "application/json"
       }
