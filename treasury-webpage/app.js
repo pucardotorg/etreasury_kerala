@@ -29,19 +29,57 @@ app.post(`${contextPath}`, async (req, res) => {
     const paymentStatus = returnParams.status;
 
     const requestInfo = {
-      apiId: "string",
-      ver: "string",
-      ts: 0,
-      action: "string",
-      did: "string",
-      key: "string",
-      msgId: "string",
-      requesterId: "string",
-      authToken: "06aabaa6-3431-41eb-a97c-ab8265289d91",
-      userInfo: {
-        uuid: "435f92c-e22a-4a2e-8a5e-3f03baa46cb1"
-      }
-    };    
+        apiId: "Rainmaker",
+        authToken: "d57ab03c-a3e3-4c2f-8de2-93c13dd2c00f",
+        userInfo: {
+            id: 378,
+            uuid: "85dd084c-1f75-4513-87f3-765cef1b2462",
+            userName: "9016190161",
+            name: "SYSTEM USER",
+            mobileNumber: "9016190161",
+            type: "CITIZEN",
+            roles: [
+                {
+                    name: "CASE_VIEWER",
+                    code: "CASE_VIEWER",
+                    tenantId: "kl"
+                },
+                {
+                    name: "DEPOSITION_EDITOR",
+                    code: "DEPOSITION_EDITOR",
+                    tenantId: "kl"
+                },
+                {
+                    name: "DEPOSITION_VIEWER",
+                    code: "DEPOSITION_VIEWER",
+                    tenantId: "kl"
+                },
+                {
+                    name: "Citizen",
+                    code: "CITIZEN",
+                    tenantId: "kl"
+                },
+                {
+                    name: "DEPOSITION_CREATOR",
+                    code: "DEPOSITION_CREATOR",
+                    tenantId: "kl"
+                },
+                {
+                    name: "CASE_EDITOR",
+                    code: "CASE_EDITOR",
+                    tenantId: "kl"
+                },
+                {
+                    name: "CASE_CREATOR",
+                    code: "CASE_CREATOR",
+                    tenantId: "kl"
+                }
+            ],
+            active: true,
+            tenantId: "kl"
+        },
+        msgId: "1720795009723|en_IN"
+    };  
 
     const treasuryParams = {
       status: paymentStatus,
