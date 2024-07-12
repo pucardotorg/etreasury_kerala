@@ -12,7 +12,7 @@ import lombok.Setter;
 public class TreasuryParams {
 
     private String authToken;
-    private String status;
+    private Boolean status;
     private String rek;
     private String hmac;
     private String data;
