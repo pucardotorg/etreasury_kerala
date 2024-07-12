@@ -1,5 +1,6 @@
 package org.egov.eTreasury.controller;
 
+import org.egov.common.contract.models.Document;
 import org.egov.eTreasury.model.*;
 import org.egov.eTreasury.service.PaymentService;
 import org.egov.eTreasury.util.ResponseInfoFactory;
@@ -47,21 +48,19 @@ public class PaymentController {
     @PostMapping("/v1/_doubleVerification")
     public HtmlResponse verifyDetails(@RequestBody VerificationRequest request) {
         log.info("Performing double verification for request: {}", request);
-        HtmlPage verificationPage = paymentService.doubleVerifyPayment(request.getVerificationDetails(), request.getRequestInfo());
+        HtmlPage verificationPage = paymentService.doubleVerifyPayment(request.getVerificationData(), request.getRequestInfo());
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         log.info("Double verification successful for request: {}", request);
         return HtmlResponse.builder().htmlPage(verificationPage).responseInfo(responseInfo).build();
     }
 
     @PostMapping("/v1/_printPayInSlip")
-    public ResponseEntity<?> printPayInSlip(@RequestBody PrintRequest request) {
-        log.info("Printing pay-in slip for details: {}", request);
-        ByteArrayResource resource = paymentService.printPayInSlip(request.getPrintDetails(), request.getRequestInfo());
-        log.info("Pay-in slip printed successfully for details: {}", request);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + "Application-" + request.getPrintDetails().getHcinNo() + ".pdf" + "\"")
-                .header(HttpHeaders.CONTENT_TYPE, "application/pdf").body(resource);
+    public PrintResponse printPayInSlip(@RequestBody PrintRequest request) {
+        log.info("Fetching pay-in slip for details: {}", request);
+        Document document = paymentService.printPayInSlip(request.getPrintDetails(), request.getRequestInfo());
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        log.info("Pay-in slip fetched successfully for details: {}", request);
+        return PrintResponse.builder().responseInfo(responseInfo).document(document).build();
     }
 
     @PostMapping("/v1/_transactionDetails")

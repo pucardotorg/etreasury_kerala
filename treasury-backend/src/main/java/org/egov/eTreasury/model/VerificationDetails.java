@@ -22,4 +22,5 @@ public class VerificationDetails {
     private String departmentId;
 
     @JsonProperty("SERVICE_DEPT_CODE")
-    private String serviceDeptCode;}
+    private String serviceDeptCode;
+}

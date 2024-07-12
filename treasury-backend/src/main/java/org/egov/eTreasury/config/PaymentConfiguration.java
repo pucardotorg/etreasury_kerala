@@ -65,4 +65,13 @@ public class PaymentConfiguration {
     
     @Value("${egov.collectionservice.payment.create}")
     private String collectionsPaymentCreatePath;
+
+    @Value("${egov.file.store.treasury.module}")
+    private String treasuryFileStoreModule;
+
+    @Value("${egov.file.store.host}")
+    private String fileStoreHost;
+
+    @Value("${egov.file.store.save.endpoint}")
+    private String fileStoreEndPoint;
 }

@@ -14,6 +14,6 @@ public class VerificationRequest {
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
 
-    @JsonProperty("VerificationDetails")
-    private VerificationDetails verificationDetails;
+    @JsonProperty("VerificationData")
+    private VerificationData verificationData;
 }

@@ -1,5 +1,6 @@
 package org.egov.eTreasury.service;
 
+import org.egov.common.contract.models.Document;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.eTreasury.config.PaymentConfiguration;
 import org.egov.eTreasury.kafka.Producer;
@@ -47,38 +48,31 @@ public class PaymentService {
 
     private final EncryptionUtil encryptionUtil;
 
-    private final AuthUtil authUtil;
-
-    private final RefundUtil refundUtil;
-
     private final Producer producer;
 
     private final AuthSekRepository repository;
 
     private final CollectionsUtil collectionsUtil;
 
-    private final ConnectionUtil connectionUtil;
+    private final FileStorageUtil fileStorageUtil;
 
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
-                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil, AuthUtil authUtil,
-                          RefundUtil refundUtil, Producer producer, AuthSekRepository repository,
-                          CollectionsUtil collectionsUtil, ConnectionUtil connectionUtil) {
+                          ObjectMapper objectMapper, EncryptionUtil encryptionUtil,
+                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
         this.encryptionUtil = encryptionUtil;
-        this.authUtil = authUtil;
-        this.refundUtil = refundUtil;
         this.producer = producer;
         this.repository = repository;
         this.collectionsUtil = collectionsUtil;
-        this.connectionUtil = connectionUtil;
+        this.fileStorageUtil = fileStorageUtil;
     }
 
     public ConnectionStatus verifyConnection() {
         try {
-            ResponseEntity<ConnectionStatus> responseEntity = connectionUtil.callService(config.getServerStatusUrl(), ConnectionStatus.class);
+            ResponseEntity<ConnectionStatus> responseEntity = treasuryUtil.callConnectionService(config.getServerStatusUrl(), ConnectionStatus.class);
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 return responseEntity.getBody();
             } else {
@@ -99,7 +93,7 @@ public class PaymentService {
             AuthRequest authRequest = new AuthRequest(secretMap.get("encodedAppKey"));
             String payload = objectMapper.writeValueAsString(authRequest);
             // Call the authentication service
-            ResponseEntity<?> responseEntity = authUtil.callAuthService(config.getClientId(), secretMap.get("encryptedClientSecret"),
+            ResponseEntity<?> responseEntity = treasuryUtil.callAuthService(config.getClientId(), secretMap.get("encryptedClientSecret"),
             payload, config.getAuthUrl());
             log.info("Status Code: {}", responseEntity.getStatusCode());
             log.info("Response Body: {}", responseEntity.getBody());
@@ -159,13 +153,24 @@ public class PaymentService {
         }
     }
 
-    public HtmlPage doubleVerifyPayment(VerificationDetails verificationDetails, RequestInfo requestInfo) {
+    public HtmlPage doubleVerifyPayment(VerificationData verificationData, RequestInfo requestInfo) {
         try {
+            VerificationDetails verificationDetails = verificationData.getVerificationDetails();
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
 
             // Decrypt the SEK using the appKey
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+            AuthSek authSek = AuthSek.builder()
+                    .authToken(secretMap.get("authToken"))
+                    .decryptedSek(decryptedSek)
+                    .billId(verificationData.getBillId())
+                    .businessService(verificationData.getBusinessService())
+                    .serviceNumber(verificationData.getServiceNumber())
+                    .totalDue(verificationData.getTotalDue())
+                    .paidBy(verificationData.getPaidBy())
+                    .sessionTime(System.currentTimeMillis()).build();
+            saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
             verificationDetails.setOfficeCode(config.getOfficeCode());
@@ -187,7 +192,7 @@ public class PaymentService {
         }
     }
 
-    public ByteArrayResource printPayInSlip(PrintDetails printDetails, RequestInfo requestInfo) {
+    public Document printPayInSlip(PrintDetails printDetails, RequestInfo requestInfo) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -209,7 +214,8 @@ public class PaymentService {
 
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                return objectMapper.convertValue(responseEntity.getBody(), ByteArrayResource.class);
+                 ByteArrayResource byteArrayResource = objectMapper.convertValue(responseEntity.getBody(), ByteArrayResource.class);
+                 return fileStorageUtil.saveDocumentToFileStore(byteArrayResource);
             } else {
                 throw new CustomException("PRINT_SLIP_FAILED", "Pay in slip request failed");
             }
@@ -258,7 +264,7 @@ public class PaymentService {
             String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundDetails));
 
             // Call the service
-            ResponseEntity<TreasuryResponse> responseEntity = refundUtil.callRefundService(config.getClientId(), secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
+            ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(), secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
             TreasuryResponse response = responseEntity.getBody();
             String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
             String decryptedData = encryptionUtil.decryptAESForResponse(response.getData(), decryptedRek);
@@ -282,7 +288,7 @@ public class PaymentService {
             String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundStatus));
 
             // Call the service
-            ResponseEntity<TreasuryResponse> responseEntity = refundUtil.callRefundService(config.getClientId(), 
+            ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(),
             secretMap.get("authToken"), postBody, config.getRefundStatusUrl(), TreasuryResponse.class);
             TreasuryResponse response = responseEntity.getBody();
             String decryptedRek = encryptionUtil.decryptAESForResponse(response.getRek(), decryptedSek);
