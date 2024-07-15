@@ -210,7 +210,7 @@ public class PaymentService {
 
             // Process the response
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                 ByteArrayResource byteArrayResource = objectMapper.convertValue(responseEntity.getBody(), ByteArrayResource.class);
+                 ByteArrayResource byteArrayResource = new ByteArrayResource(responseEntity.getBody());
                  return fileStorageUtil.saveDocumentToFileStore(byteArrayResource);
             } else {
                 throw new CustomException("PRINT_SLIP_FAILED", "Pay in slip request failed");
