@@ -59,7 +59,6 @@ public class FileStorageUtil {
             // Build the entity
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-
             ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri, requestEntity, Object.class);
 
             return extractDocumentFromResponse(responseEntity);

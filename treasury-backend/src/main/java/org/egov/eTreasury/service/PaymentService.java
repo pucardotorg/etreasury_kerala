@@ -15,7 +15,6 @@ import org.egov.eTreasury.model.*;
 import org.egov.eTreasury.repository.AuthSekRepository;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -80,7 +79,7 @@ public class PaymentService {
     }
 
     private Map<String, String> authenticate() {
-        Map<String, String> secretMap = new HashMap<>();
+        Map<String, String> secretMap;
         try {
             // Generate client secret and app key
             secretMap = encryptionUtil.getClientSecretAndAppKey(config.getClientSecret(), config.getPublicKey());
@@ -372,10 +371,13 @@ public class PaymentService {
     }
 
     private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo) {
+        PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
+        Document document = printPayInSlip(printDetails, requestInfo);
         PaymentDetail paymentDetail = PaymentDetail.builder()
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
+            .receiptNumber(document.getFileStore())
             .businessService(authSek.getBusinessService()).build();
         Payment payment = Payment.builder()
             .tenantId(config.getEgovStateTenantId())
@@ -389,6 +391,7 @@ public class PaymentService {
             .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
             .paymentMode("ONLINE")
+            .paymentStatus(transactionDetails.getStatus())
             .build();
         PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
         collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
