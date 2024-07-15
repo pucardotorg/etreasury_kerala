@@ -36,21 +36,31 @@ public class FileStorageUtil {
         this.mapper = mapper;
     }
 
-    public Document saveDocumentToFileStore(ByteArrayResource byteArrayResource) {
+    public Document saveDocumentToFileStore(byte[] payInSlipBytes) {
 
         try {
             String uri = buildFileStoreUri();
 
+            ByteArrayResource byteArrayResource = new ByteArrayResource(payInSlipBytes) {
+                @Override
+                public String getFilename() {
+                    return "file.pdf"; // Provide a filename
+                }
+            };
+
+            // Create headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-            MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
-            parts.add("file", byteArrayResource);
+            // Create the request body
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", byteArrayResource);
 
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(parts, headers);
+            // Build the entity
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri.toString(),
-                    requestEntity, Object.class);
+
+            ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri, requestEntity, Object.class);
 
             return extractDocumentFromResponse(responseEntity);
         } catch (Exception e) {
