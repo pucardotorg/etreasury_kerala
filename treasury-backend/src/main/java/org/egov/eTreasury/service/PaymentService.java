@@ -7,9 +7,7 @@ import org.egov.eTreasury.kafka.Producer;
 import org.egov.eTreasury.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import digit.models.coremodels.Payment;
 import digit.models.coremodels.PaymentDetail;
-import digit.models.coremodels.PaymentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.eTreasury.model.*;
 import org.egov.eTreasury.repository.AuthSekRepository;
@@ -377,7 +375,6 @@ public class PaymentService {
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
-            .receiptNumber(document.getFileStore())
             .businessService(authSek.getBusinessService()).build();
         Payment payment = Payment.builder()
             .tenantId(config.getEgovStateTenantId())
@@ -391,8 +388,12 @@ public class PaymentService {
             .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
             .paymentMode("ONLINE")
-            .paymentStatus(transactionDetails.getStatus())
+            .fileStoreId(document.getFileStore())
             .build();
+        String paymentStatus = transactionDetails.getStatus();
+        if (paymentStatus.equals("Y")) {
+            payment.setPaymentStatus("DEPOSITED");
+        }
         PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
         collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
     }
