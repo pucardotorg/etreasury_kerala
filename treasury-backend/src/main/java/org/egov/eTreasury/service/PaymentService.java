@@ -142,7 +142,7 @@ public class PaymentService {
             return HtmlPage.builder().htmlString(htmlString).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
-            throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF chsllan");
+            throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF challan");
         }
     }
 
@@ -301,6 +301,10 @@ public class PaymentService {
                 String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
                 String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
+                // TODO create treasury payment data and from here and store it
+                TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
+                        .requestInfo(requestInfo).treasuryPaymentData(null).build();
+                producer.push("save-treasury-payment-data", request);
                 updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo);
             }
         } catch (Exception e) {
