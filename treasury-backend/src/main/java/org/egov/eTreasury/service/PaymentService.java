@@ -111,6 +111,8 @@ public class PaymentService {
 
             // Decrypt the SEK using the appKey
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+
+            //TODO get department id and fill it
             AuthSek authSek = AuthSek.builder()
                 .authToken(secretMap.get("authToken"))
                 .decryptedSek(decryptedSek)
@@ -162,7 +164,8 @@ public class PaymentService {
                     .serviceNumber(verificationData.getServiceNumber())
                     .totalDue(verificationData.getTotalDue())
                     .paidBy(verificationData.getPaidBy())
-                    .sessionTime(System.currentTimeMillis()).build();
+                    .sessionTime(System.currentTimeMillis())
+                    .departmentId(verificationDetails.getDepartmentId()).build();
             saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body

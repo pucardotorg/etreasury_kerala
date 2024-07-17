@@ -22,4 +22,5 @@ public class AuthSek {
     private String mobileNumber;
     private String paidBy;
     private long sessionTime;
+    private String departmentId;
 }
