@@ -23,6 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -48,10 +49,13 @@ public class PaymentService {
 
     private final FileStorageUtil fileStorageUtil;
 
+    private final IdgenUtil idgenUtil;
+
+
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
                           ObjectMapper objectMapper, EncryptionUtil encryptionUtil,
-                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil) {
+                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil, IdgenUtil idgenUtil) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
@@ -60,6 +64,7 @@ public class PaymentService {
         this.repository = repository;
         this.collectionsUtil = collectionsUtil;
         this.fileStorageUtil = fileStorageUtil;
+        this.idgenUtil = idgenUtil;
     }
 
     public ConnectionStatus verifyConnection() {
@@ -111,16 +116,19 @@ public class PaymentService {
 
             // Decrypt the SEK using the appKey
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+
+            String department_id = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
             AuthSek authSek = AuthSek.builder()
-                .authToken(secretMap.get("authToken"))
-                .decryptedSek(decryptedSek)
-                .billId(challanData.getBillId())
-                .businessService(challanData.getBusinessService())
-                .serviceNumber(challanData.getServiceNumber())
-                .mobileNumber(challanData.getMobileNumber())
-                .totalDue(challanData.getTotalDue())
-                .paidBy(challanData.getPaidBy())
-                .sessionTime(System.currentTimeMillis()).build();
+                    .authToken(secretMap.get("authToken"))
+                    .decryptedSek(decryptedSek)
+                    .billId(challanData.getBillId())
+                    .businessService(challanData.getBusinessService())
+                    .serviceNumber(challanData.getServiceNumber())
+                    .mobileNumber(challanData.getMobileNumber())
+                    .totalDue(challanData.getTotalDue())
+                    .paidBy(challanData.getPaidBy())
+                    .sessionTime(System.currentTimeMillis())
+                    .departmentId(department_id).build();
             saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
@@ -142,7 +150,7 @@ public class PaymentService {
             return HtmlPage.builder().htmlString(htmlString).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
-            throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF chsllan");
+            throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF challan");
         }
     }
 
@@ -162,7 +170,8 @@ public class PaymentService {
                     .serviceNumber(verificationData.getServiceNumber())
                     .totalDue(verificationData.getTotalDue())
                     .paidBy(verificationData.getPaidBy())
-                    .sessionTime(System.currentTimeMillis()).build();
+                    .sessionTime(System.currentTimeMillis())
+                    .departmentId(verificationDetails.getDepartmentId()).build();
             saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
@@ -301,7 +310,29 @@ public class PaymentService {
                 String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
                 String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
-                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo);
+                String fileStoreId = null;
+                if (treasuryParams.getStatus()) {
+                    PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
+                    Document document = printPayInSlip(printDetails, requestInfo);
+                    fileStoreId = document.getFileStore();
+                }
+                TreasuryPaymentData data = TreasuryPaymentData.builder()
+                        .grn(transactionDetails.getGrn())
+                        .challanTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getChallanTimestamp())))
+                        .bankRefNo(transactionDetails.getBankRefNo())
+                        .bankTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getBankTimestamp())))
+                        .bankCode(transactionDetails.getBankCode())
+                        .status(transactionDetails.getStatus().charAt(0))
+                        .cin(transactionDetails.getCin())
+                        .amount(new BigDecimal(transactionDetails.getAmount()))
+                        .partyName(transactionDetails.getPartyName())
+                        .departmentId(transactionDetails.getDepartmentId())
+                        .remarkStatus(transactionDetails.getRemarkStatus())
+                        .remarks(transactionDetails.getRemarks()).build();
+                TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
+                        .requestInfo(requestInfo).treasuryPaymentData(data).build();
+                producer.push("save-treasury-payment-data", request);
+                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
             }
         } catch (Exception e) {
             log.error("Decrypt Treasury Response failed: ", e);
@@ -368,9 +399,7 @@ public class PaymentService {
         }
     }
 
-    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo) {
-        PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
-        Document document = printPayInSlip(printDetails, requestInfo);
+    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo, String fileStoreId) {
         PaymentDetail paymentDetail = PaymentDetail.builder()
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
@@ -388,7 +417,7 @@ public class PaymentService {
             .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
             .paymentMode("ONLINE")
-            .fileStoreId(document.getFileStore())
+            .fileStoreId(fileStoreId)
             .build();
         String paymentStatus = transactionDetails.getStatus();
         if (paymentStatus.equals("Y")) {

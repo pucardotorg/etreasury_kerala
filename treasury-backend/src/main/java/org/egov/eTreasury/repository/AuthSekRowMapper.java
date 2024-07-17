@@ -22,6 +22,7 @@ public class AuthSekRowMapper implements RowMapper<AuthSek> {
         authSek.setMobileNumber(rs.getString("mobile_number"));
         authSek.setPaidBy(rs.getString("paid_by"));
         authSek.setSessionTime(rs.getLong("session_time"));
+        authSek.setDepartmentId(rs.getString("department_id"));
         return authSek;
     }
 }
