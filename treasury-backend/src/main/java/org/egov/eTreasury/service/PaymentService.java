@@ -328,6 +328,7 @@ public class PaymentService {
                         .partyName(transactionDetails.getPartyName())
                         .departmentId(transactionDetails.getDepartmentId())
                         .remarkStatus(transactionDetails.getRemarkStatus())
+                        .fileStoreId(fileStoreId)
                         .remarks(transactionDetails.getRemarks()).build();
                 TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
                         .requestInfo(requestInfo).treasuryPaymentData(data).build();
