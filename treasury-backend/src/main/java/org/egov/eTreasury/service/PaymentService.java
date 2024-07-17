@@ -119,15 +119,15 @@ public class PaymentService {
 
             String department_id = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
             AuthSek authSek = AuthSek.builder()
-                .authToken(secretMap.get("authToken"))
-                .decryptedSek(decryptedSek)
-                .billId(challanData.getBillId())
-                .businessService(challanData.getBusinessService())
-                .serviceNumber(challanData.getServiceNumber())
-                .mobileNumber(challanData.getMobileNumber())
-                .totalDue(challanData.getTotalDue())
-                .paidBy(challanData.getPaidBy())
-                .sessionTime(System.currentTimeMillis())
+                    .authToken(secretMap.get("authToken"))
+                    .decryptedSek(decryptedSek)
+                    .billId(challanData.getBillId())
+                    .businessService(challanData.getBusinessService())
+                    .serviceNumber(challanData.getServiceNumber())
+                    .mobileNumber(challanData.getMobileNumber())
+                    .totalDue(challanData.getTotalDue())
+                    .paidBy(challanData.getPaidBy())
+                    .sessionTime(System.currentTimeMillis())
                     .departmentId(department_id).build();
             saveAuthTokenAndSek(requestInfo, authSek);
 
