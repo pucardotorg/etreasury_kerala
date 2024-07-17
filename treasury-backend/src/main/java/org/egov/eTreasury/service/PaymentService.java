@@ -23,6 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -48,10 +49,13 @@ public class PaymentService {
 
     private final FileStorageUtil fileStorageUtil;
 
+    private final IdgenUtil idgenUtil;
+
+
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
                           ObjectMapper objectMapper, EncryptionUtil encryptionUtil,
-                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil) {
+                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil, IdgenUtil idgenUtil) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
@@ -60,6 +64,7 @@ public class PaymentService {
         this.repository = repository;
         this.collectionsUtil = collectionsUtil;
         this.fileStorageUtil = fileStorageUtil;
+        this.idgenUtil = idgenUtil;
     }
 
     public ConnectionStatus verifyConnection() {
@@ -112,7 +117,7 @@ public class PaymentService {
             // Decrypt the SEK using the appKey
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
 
-            //TODO get department id and fill it
+            String department_id = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
             AuthSek authSek = AuthSek.builder()
                 .authToken(secretMap.get("authToken"))
                 .decryptedSek(decryptedSek)
@@ -122,7 +127,8 @@ public class PaymentService {
                 .mobileNumber(challanData.getMobileNumber())
                 .totalDue(challanData.getTotalDue())
                 .paidBy(challanData.getPaidBy())
-                .sessionTime(System.currentTimeMillis()).build();
+                .sessionTime(System.currentTimeMillis())
+                    .departmentId(department_id).build();
             saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
@@ -304,9 +310,22 @@ public class PaymentService {
                 String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
                 String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
-                // TODO create treasury payment data and from here and store it
+
+                TreasuryPaymentData data = TreasuryPaymentData.builder()
+                        .grn(transactionDetails.getGrn())
+                        .challanTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getChallanTimestamp())))
+                        .bankRefNo(transactionDetails.getBankRefNo())
+                        .bankTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getBankTimestamp())))
+                        .bankCode(transactionDetails.getBankCode())
+                        .status(transactionDetails.getStatus().charAt(0))
+                        .cin(transactionDetails.getCin())
+                        .amount(new BigDecimal(transactionDetails.getAmount()))
+                        .partyName(transactionDetails.getPartyName())
+                        .departmentId(transactionDetails.getDepartmentId())
+                        .remarkStatus(transactionDetails.getRemarkStatus())
+                        .remarks(transactionDetails.getRemarks()).build();
                 TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
-                        .requestInfo(requestInfo).treasuryPaymentData(null).build();
+                        .requestInfo(requestInfo).treasuryPaymentData(data).build();
                 producer.push("save-treasury-payment-data", request);
                 updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo);
             }

@@ -74,4 +74,13 @@ public class PaymentConfiguration {
 
     @Value("${egov.file.store.save.endpoint}")
     private String fileStoreEndPoint;
+
+    @Value("${egov.idgen.host}")
+    private String idGenHost;
+
+    @Value("${egov.idgen.path}")
+    private String idGenPath;
+
+    @Value("${egov.idgen.name}")
+    private String idName;
 }
