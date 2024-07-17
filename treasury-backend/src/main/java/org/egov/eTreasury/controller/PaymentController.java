@@ -98,4 +98,12 @@ public class PaymentController {
         log.info("Decrypted Treasury Response successfully for request: {}", request);
         return ResponseEntity.ok().body(responseInfo);
     }
+    @PostMapping("/v1/_getPaymentReceipt")
+    public PrintResponse getTreasuryPaymentReceipt(@RequestParam String billId, @RequestBody RequestInfo requestInfo) {
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
+        Document document = paymentService.getTreasuryPaymentData(billId);
+        return PrintResponse.builder()
+                .responseInfo(responseInfo)
+                .document(document).build();
+    }
 }

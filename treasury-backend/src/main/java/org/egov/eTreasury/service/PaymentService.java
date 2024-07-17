@@ -4,6 +4,7 @@ import org.egov.common.contract.models.Document;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.eTreasury.config.PaymentConfiguration;
 import org.egov.eTreasury.kafka.Producer;
+import org.egov.eTreasury.repository.TreasuryPaymentRepository;
 import org.egov.eTreasury.util.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,11 +52,13 @@ public class PaymentService {
 
     private final IdgenUtil idgenUtil;
 
+    private final TreasuryPaymentRepository treasuryPaymentRepository;
+
 
     @Autowired
     public PaymentService(PaymentConfiguration config, ETreasuryUtil treasuryUtil,
                           ObjectMapper objectMapper, EncryptionUtil encryptionUtil,
-                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil, IdgenUtil idgenUtil) {
+                          Producer producer, AuthSekRepository repository, CollectionsUtil collectionsUtil, FileStorageUtil fileStorageUtil, IdgenUtil idgenUtil, TreasuryPaymentRepository treasuryPaymentRepository) {
         this.config = config;
         this.treasuryUtil = treasuryUtil;
         this.objectMapper = objectMapper;
@@ -65,6 +68,7 @@ public class PaymentService {
         this.collectionsUtil = collectionsUtil;
         this.fileStorageUtil = fileStorageUtil;
         this.idgenUtil = idgenUtil;
+        this.treasuryPaymentRepository = treasuryPaymentRepository;
     }
 
     public ConnectionStatus verifyConnection() {
@@ -446,5 +450,12 @@ public class PaymentService {
         } else {
             return null;
         }
+    }
+    public Document getTreasuryPaymentData(String billId){
+        Optional<TreasuryPaymentData> optionalTreasuryPaymentData = treasuryPaymentRepository.getTreasuryPaymentData(billId)
+                .stream().findFirst();
+        if (optionalTreasuryPaymentData.isPresent()){
+            return Document.builder().fileStore(optionalTreasuryPaymentData.get().getFileStoreId()).documentType("application/pdf").build();
+        } else return null;
     }
 }
