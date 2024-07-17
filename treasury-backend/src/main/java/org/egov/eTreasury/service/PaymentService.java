@@ -310,7 +310,12 @@ public class PaymentService {
                 String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
                 String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
-
+                String fileStoreId = null;
+                if (treasuryParams.getStatus()) {
+                    PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
+                    Document document = printPayInSlip(printDetails, requestInfo);
+                    fileStoreId = document.getFileStore();
+                }
                 TreasuryPaymentData data = TreasuryPaymentData.builder()
                         .grn(transactionDetails.getGrn())
                         .challanTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getChallanTimestamp())))
@@ -327,7 +332,7 @@ public class PaymentService {
                 TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
                         .requestInfo(requestInfo).treasuryPaymentData(data).build();
                 producer.push("save-treasury-payment-data", request);
-                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo);
+                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
             }
         } catch (Exception e) {
             log.error("Decrypt Treasury Response failed: ", e);
@@ -394,9 +399,7 @@ public class PaymentService {
         }
     }
 
-    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo) {
-        PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
-        Document document = printPayInSlip(printDetails, requestInfo);
+    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo, String fileStoreId) {
         PaymentDetail paymentDetail = PaymentDetail.builder()
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
@@ -414,7 +417,7 @@ public class PaymentService {
             .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
             .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
             .paymentMode("ONLINE")
-            .fileStoreId(document.getFileStore())
+            .fileStoreId(fileStoreId)
             .build();
         String paymentStatus = transactionDetails.getStatus();
         if (paymentStatus.equals("Y")) {

@@ -35,4 +35,6 @@ public class TreasuryPaymentData {
     private String remarkStatus;
 
     private String remarks;
+
+    private String fileStoreId;
 }

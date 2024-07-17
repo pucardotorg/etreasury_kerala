@@ -12,5 +12,6 @@ CREATE TABLE treasury_payment_data (
     amount DECIMAL(10, 2),
     party_name VARCHAR(100),
     remark_status VARCHAR(100),
-    remarks VARCHAR(255)
+    remarks VARCHAR(255),
+    file_Store_id VARCHAR(64)
 );
