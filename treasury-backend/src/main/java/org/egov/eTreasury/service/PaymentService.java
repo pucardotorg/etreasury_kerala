@@ -121,7 +121,7 @@ public class PaymentService {
             // Decrypt the SEK using the appKey
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
 
-            String department_id = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
+            String departmentId = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
             AuthSek authSek = AuthSek.builder()
                     .authToken(secretMap.get("authToken"))
                     .decryptedSek(decryptedSek)
@@ -132,11 +132,12 @@ public class PaymentService {
                     .totalDue(challanData.getTotalDue())
                     .paidBy(challanData.getPaidBy())
                     .sessionTime(System.currentTimeMillis())
-                    .departmentId(department_id).build();
+                    .departmentId(departmentId).build();
             saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
             challanData.getChallanDetails().setServiceDeptCode(config.getServiceDeptCode());
+            challanData.getChallanDetails().setDepartmentId(departmentId);
             challanData.getChallanDetails().setOfficeCode(config.getOfficeCode());
             String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(challanData.getChallanDetails()));
 
