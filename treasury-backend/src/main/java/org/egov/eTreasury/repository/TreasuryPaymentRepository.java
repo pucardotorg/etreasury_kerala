@@ -23,7 +23,7 @@ public class TreasuryPaymentRepository {
     }
     public List<TreasuryPaymentData> getTreasuryPaymentData(String billId){
         List<String> preparedStmtList = new ArrayList<>();
-        String query = treasuryPaymentQueryBuilder.getAuthSekQuery(billId, preparedStmtList);
+        String query = treasuryPaymentQueryBuilder.getTreasuryPaymentQuery(billId, preparedStmtList);
         log.debug("Final query: " + query);
         return jdbcTemplate.query(query, preparedStmtList.toArray(), treasuryPaymentRowMapper);
     }

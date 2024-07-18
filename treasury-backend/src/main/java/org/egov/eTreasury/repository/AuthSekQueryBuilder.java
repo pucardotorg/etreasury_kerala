@@ -21,7 +21,7 @@ public class AuthSekQueryBuilder {
             query.append(" auth_token = ? ");
             preparedStmtList.add(authToken);
         }
-
+        query.append("ORDER BY session_time");
         return query.toString();
     }
 
