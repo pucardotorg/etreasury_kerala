@@ -11,8 +11,12 @@ import java.util.List;
 public class TreasuryPaymentQueryBuilder {
 
     private final String BASE_QUERY = "SELECT department_id, grn, challan_timestamp, bank_ref_no, bank_timestamp, bank_code, status, cin, amount, party_name, remark_status, remarks, file_store_id ";
+
     private static final String FROM_TABLES = "FROM treasury_payment_data ";
-    private static final String DEPARTMENT_ID_SUBQUERY = "SELECT department_id FROM auth_sek_session_data WHERE bill_id = ? ORDER BY session_time";
+
+    private static final String DEPARTMENT_ID_SUBQUERY = "SELECT department_id FROM auth_sek_session_data WHERE bill_id = ? ";
+
+    private static final String SUBQUERY = "ORDER BY session_time )";
 
     public String getTreasuryPaymentQuery(String billId, List<String> preparedStmtList) {
         StringBuilder query = new StringBuilder(BASE_QUERY);
@@ -22,7 +26,7 @@ public class TreasuryPaymentQueryBuilder {
             addClauseIfRequired(query, preparedStmtList);
             query.append("department_id IN (");
             query.append(DEPARTMENT_ID_SUBQUERY);
-            query.append(")");
+            query.append(SUBQUERY);
             preparedStmtList.add(billId);
         }
 
