@@ -13,8 +13,21 @@ import java.sql.SQLException;
 public class TreasuryPaymentRowMapper implements RowMapper<TreasuryPaymentData> {
     @Override
     public TreasuryPaymentData mapRow(ResultSet rs, int rowNum) throws SQLException {
-        TreasuryPaymentData treasuryPaymentData = TreasuryPaymentData.builder()
-                .fileStoreId(rs.getString("file_store_id")).build();
+        TreasuryPaymentData treasuryPaymentData  = TreasuryPaymentData.builder()
+                .departmentId(rs.getString("department_id"))
+                .grn(rs.getString("grn"))
+                .challanTimestamp(rs.getString("challan_timestamp"))
+                .bankRefNo(rs.getString("bank_ref_no"))
+                .bankTimestamp(rs.getString("bank_timestamp"))
+                .bankCode(rs.getString("bank_code"))
+                .status(rs.getString("status").charAt(0))
+                .cin(rs.getString("cin"))
+                .amount(rs.getBigDecimal("amount"))
+                .partyName(rs.getString("party_name"))
+                .remarkStatus(rs.getString("remark_status"))
+                .remarks(rs.getString("remarks"))
+                .fileStoreId(rs.getString("file_store_id"))
+                .build();
         return treasuryPaymentData;
     }
 }

@@ -12,6 +12,8 @@ public class AuthSekQueryBuilder {
 
     private static final String FROM_TABLES = " FROM auth_sek_session_data ";
 
+    private static final String ORDER_BY_SESSION_TIME = "ORDER BY session_time ";
+
     public String getAuthSekQuery(String authToken, List<String> preparedStmtList) {
         StringBuilder query = new StringBuilder(BASE_QUERY);
         query.append(FROM_TABLES);
@@ -21,7 +23,7 @@ public class AuthSekQueryBuilder {
             query.append(" auth_token = ? ");
             preparedStmtList.add(authToken);
         }
-
+        query.append(ORDER_BY_SESSION_TIME);
         return query.toString();
     }
 

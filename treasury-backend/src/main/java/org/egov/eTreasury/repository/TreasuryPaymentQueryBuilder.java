@@ -10,20 +10,22 @@ import java.util.List;
 @Slf4j
 public class TreasuryPaymentQueryBuilder {
 
-    private final String BASE_QUERY = "SELECT file_store_id ";
+    private final String BASE_QUERY = "SELECT department_id, grn, challan_timestamp, bank_ref_no, bank_timestamp, bank_code, status, cin, amount, party_name, remark_status, remarks, file_store_id ";
+    private static final String FROM_TABLES = "FROM treasury_payment_data ";
 
-    private static final String FROM_TABLES = " FROM treasury_payment_data ";
+    private static final String DEPARTMENT_ID_SUBQUERY = "SELECT department_id FROM auth_sek_session_data WHERE bill_id = ? ";
 
-    private static final String DEPARTMENT_ID = " SELECT department_id FROM auth_sek_session_data WHERE ";
+    private static final String ORDER_BY_SESSION_TIME = "ORDER BY session_time )";
 
-    public String getAuthSekQuery(String billId, List<String> preparedStmtList) {
+    public String getTreasuryPaymentQuery(String billId, List<String> preparedStmtList) {
         StringBuilder query = new StringBuilder(BASE_QUERY);
         query.append(FROM_TABLES);
 
         if (StringUtils.hasText(billId)) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(" department_id in (");
-            query.append(DEPARTMENT_ID).append(" bill_id = ? )");
+            query.append("department_id IN (");
+            query.append(DEPARTMENT_ID_SUBQUERY);
+            query.append(ORDER_BY_SESSION_TIME);
             preparedStmtList.add(billId);
         }
 
@@ -32,9 +34,9 @@ public class TreasuryPaymentQueryBuilder {
 
     private void addClauseIfRequired(StringBuilder query, List<String> preparedStmtList) {
         if (preparedStmtList.isEmpty()) {
-            query.append(" WHERE ");
+            query.append("WHERE ");
         } else {
-            query.append(" AND ");
+            query.append("AND ");
         }
     }
 }

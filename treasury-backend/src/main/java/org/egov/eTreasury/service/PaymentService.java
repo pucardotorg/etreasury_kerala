@@ -314,12 +314,9 @@ public class PaymentService {
                 String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
                 String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
-                String fileStoreId = null;
-                if (treasuryParams.getStatus()) {
-                    PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
-                    Document document = printPayInSlip(printDetails, requestInfo);
-                    fileStoreId = document.getFileStore();
-                }
+                PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
+                Document document = printPayInSlip(printDetails, requestInfo);
+                String fileStoreId = document.getFileStore();
                 TreasuryPaymentData data = TreasuryPaymentData.builder()
                         .grn(transactionDetails.getGrn())
                         .challanTimestamp(transactionDetails.getChallanTimestamp())
@@ -451,9 +448,14 @@ public class PaymentService {
             return null;
         }
     }
-    public Document getTreasuryPaymentData(String billId){
+    public Document getTreasuryPaymentData(String billId) {
         Optional<TreasuryPaymentData> optionalPaymentData = treasuryPaymentRepository.getTreasuryPaymentData(billId)
                 .stream().findFirst();
-        return optionalPaymentData.map(treasuryPaymentData -> Document.builder().fileStore(treasuryPaymentData.getFileStoreId()).documentType("application/pdf").build()).orElse(null);
+        if (optionalPaymentData.isPresent()) {
+            return  Document.builder().fileStore(optionalPaymentData.get().getFileStoreId()).documentType("application/pdf").build();
+        } else {
+            log.error("No Payment data for given bill Id");
+            throw new CustomException("PAYMENT_RECEIPT_INVALID_BILL_ID", "Given Bill Id Has no Payment Data");
+        }
     }
 }

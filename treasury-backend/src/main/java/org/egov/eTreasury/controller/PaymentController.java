@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -98,6 +96,7 @@ public class PaymentController {
         log.info("Decrypted Treasury Response successfully for request: {}", request);
         return ResponseEntity.ok().body(responseInfo);
     }
+
     @PostMapping("/v1/_getPaymentReceipt")
     public PrintResponse getTreasuryPaymentReceipt(@RequestParam String billId, @RequestBody RequestInfo requestInfo) {
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
