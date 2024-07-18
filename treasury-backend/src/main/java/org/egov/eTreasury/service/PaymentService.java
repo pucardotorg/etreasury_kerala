@@ -24,7 +24,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -323,9 +322,9 @@ public class PaymentService {
                 }
                 TreasuryPaymentData data = TreasuryPaymentData.builder()
                         .grn(transactionDetails.getGrn())
-                        .challanTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getChallanTimestamp())))
+                        .challanTimestamp(transactionDetails.getChallanTimestamp())
                         .bankRefNo(transactionDetails.getBankRefNo())
-                        .bankTimestamp(new Timestamp(convertTimestampToMillis(transactionDetails.getBankTimestamp())))
+                        .bankTimestamp(transactionDetails.getBankTimestamp())
                         .bankCode(transactionDetails.getBankCode())
                         .status(transactionDetails.getStatus().charAt(0))
                         .cin(transactionDetails.getCin())
@@ -453,10 +452,8 @@ public class PaymentService {
         }
     }
     public Document getTreasuryPaymentData(String billId){
-        Optional<TreasuryPaymentData> optionalTreasuryPaymentData = treasuryPaymentRepository.getTreasuryPaymentData(billId)
+        Optional<TreasuryPaymentData> optionalPaymentData = treasuryPaymentRepository.getTreasuryPaymentData(billId)
                 .stream().findFirst();
-        if (optionalTreasuryPaymentData.isPresent()){
-            return Document.builder().fileStore(optionalTreasuryPaymentData.get().getFileStoreId()).documentType("application/pdf").build();
-        } else return null;
+        return optionalPaymentData.map(treasuryPaymentData -> Document.builder().fileStore(treasuryPaymentData.getFileStoreId()).documentType("application/pdf").build()).orElse(null);
     }
 }

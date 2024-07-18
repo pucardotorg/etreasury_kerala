@@ -14,11 +14,11 @@ public class TreasuryPaymentData {
 
     private String grn;
 
-    private Timestamp challanTimestamp;
+    private String challanTimestamp;
 
     private String bankRefNo;
 
-    private Timestamp bankTimestamp;
+    private String bankTimestamp;
 
     private String bankCode;
 
