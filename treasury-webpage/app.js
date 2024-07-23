@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const axios = require("axios");
+const qs = require('qs');
 
 const app = express();
 const port = 8080;
@@ -28,57 +29,18 @@ app.post(`${contextPath}`, async (req, res) => {
     const returnHeader = JSON.parse(req.body.RETURN_HEADER);
     const paymentStatus = returnParams.status;
 
+    // Fetch Auth Token
+    let authToken;
+    try {
+      authToken = await getAuthForDristi();
+    } catch (authError) {
+      console.error("Failed to get Auth token:", authError);
+      return res.status(500).send("Failed to get Auth token");
+    }
+
     const requestInfo = {
         apiId: "Rainmaker",
-        authToken: "d57ab03c-a3e3-4c2f-8de2-93c13dd2c00f",
-        userInfo: {
-            id: 378,
-            uuid: "85dd084c-1f75-4513-87f3-765cef1b2462",
-            userName: "9016190161",
-            name: "SYSTEM USER",
-            mobileNumber: "9016190161",
-            type: "CITIZEN",
-            roles: [
-                {
-                    name: "CASE_VIEWER",
-                    code: "CASE_VIEWER",
-                    tenantId: "kl"
-                },
-                {
-                    name: "DEPOSITION_EDITOR",
-                    code: "DEPOSITION_EDITOR",
-                    tenantId: "kl"
-                },
-                {
-                    name: "DEPOSITION_VIEWER",
-                    code: "DEPOSITION_VIEWER",
-                    tenantId: "kl"
-                },
-                {
-                    name: "Citizen",
-                    code: "CITIZEN",
-                    tenantId: "kl"
-                },
-                {
-                    name: "DEPOSITION_CREATOR",
-                    code: "DEPOSITION_CREATOR",
-                    tenantId: "kl"
-                },
-                {
-                    name: "CASE_EDITOR",
-                    code: "CASE_EDITOR",
-                    tenantId: "kl"
-                },
-                {
-                    name: "CASE_CREATOR",
-                    code: "CASE_CREATOR",
-                    tenantId: "kl"
-                }
-            ],
-            active: true,
-            tenantId: "kl"
-        },
-        msgId: "1720795009723|en_IN"
+        authToken: authToken
     };  
 
     const treasuryParams = {
@@ -126,6 +88,34 @@ app.post(`${contextPath}`, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
+async function getAuthForDristi() {
+  const url = process.env.DRISTI_URL || "https://dristi-kerala-dev.pucar.org/user/oauth/token?_=1713357247536";
+  const data = qs.stringify({
+      username: process.env.USERNAME || "payment-collector",
+      password: process.env.PASSWORD || "Dristi@123",
+      tenantId: "kl",
+      userType: "EMPLOYEE",
+      scope: "read",
+      grant_type: "password"
+  });
+
+  const headers = {
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ZWdvdi11c2VyLWNsaWVudDo='
+  };
+
+  try {
+      const response = await axios.post(url, data, { headers });
+      const accessToken = response.data.access_token;
+      return accessToken;
+  } catch (error) {
+      console.error('Error fetching Auth token:', error.response ? error.response.data : error.message);
+      throw error;
+  }
+}
 
 app.listen(port, () => {
   console.log(`Server running at ${externalHost}${contextPath}`);
