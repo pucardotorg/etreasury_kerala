@@ -29,19 +29,7 @@ app.post(`${contextPath}`, async (req, res) => {
     const returnHeader = JSON.parse(req.body.RETURN_HEADER);
     const paymentStatus = returnParams.status;
 
-    // Fetch Auth Token
-    let accessToken;
-    try {
-      accessToken = await getAuthForDristi();
-    } catch (authError) {
-      console.error("Failed to get Auth token:", authError);
-      return res.status(500).send("Failed to get Auth token");
-    }
-
-    const requestInfo = {
-        apiId: "Rainmaker",
-        authToken: accessToken
-    };  
+    const requestInfo = getRequestInfo();
 
     const treasuryParams = {
       status: paymentStatus,
@@ -92,32 +80,41 @@ app.post(`${contextPath}`, async (req, res) => {
   }
 });
 
-async function getAuthForDristi() {
+async function getRequestInfo() {
   const url = process.env.DRISTI_URL || "https://dristi-kerala-dev.pucar.org/user/oauth/token?_=1713357247536";
   const data = qs.stringify({
-      username: process.env.USERNAME || "payment-collector",
-      password: process.env.PASSWORD || "Dristi@123",
-      tenantId: "kl",
-      userType: "EMPLOYEE",
-      scope: "read",
-      grant_type: "password"
+    username: process.env.USERNAME || "payment-collector",
+    password: process.env.PASSWORD || "Dristi@123",
+    tenantId: "kl",
+    userType: "EMPLOYEE",
+    scope: "read",
+    grant_type: "password"
   });
 
   const headers = {
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ZWdvdi11c2VyLWNsaWVudDo='
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Basic ZWdvdi11c2VyLWNsaWVudDo='
   };
 
   try {
-      const response = await axios.post(url, data, { headers });
-      console.log("Response data:", response.data); 
-      const accessToken = response.data.access_token;
-      return accessToken;
+    const response = await axios.post(url, data, { headers });
+    console.log("Response data:", response.data);
+
+    const accessToken = response.data.access_token;
+    const userInfo = response.data.UserRequest;
+
+    const requestInfo = {
+      apiId: "Rainmaker",
+      authToken: accessToken,
+      userInfo: userInfo
+    };
+
+    return requestInfo;
   } catch (error) {
-      console.error('Error fetching Auth token:', error.response ? error.response.data : error.message);
-      throw error;
+    console.error('Error fetching Auth token:', error.response ? error.response.data : error.message);
+    throw error;
   }
 }
 
