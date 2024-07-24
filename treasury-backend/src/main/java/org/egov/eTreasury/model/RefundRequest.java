@@ -2,17 +2,14 @@ package org.egov.eTreasury.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.egov.common.contract.request.RequestInfo;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class RefundRequest {
-
 
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;

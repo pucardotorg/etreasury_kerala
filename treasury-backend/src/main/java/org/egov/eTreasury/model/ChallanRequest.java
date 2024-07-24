@@ -2,13 +2,13 @@ package org.egov.eTreasury.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import lombok.Data;
 import org.egov.common.contract.request.RequestInfo;
 
-@Getter
-@Setter
+
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class ChallanRequest {
 
     @JsonProperty("RequestInfo")

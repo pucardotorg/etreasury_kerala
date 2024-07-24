@@ -1,5 +1,6 @@
 package org.egov.eTreasury.model;
 
+import lombok.Data;
 import org.egov.common.contract.request.RequestInfo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,12 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class TreasuryRequest {
-
     
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
