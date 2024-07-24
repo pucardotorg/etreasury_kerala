@@ -29,7 +29,7 @@ app.post(`${contextPath}`, async (req, res) => {
     const returnHeader = JSON.parse(req.body.RETURN_HEADER);
     const paymentStatus = returnParams.status;
 
-    const requestInfo = getRequestInfo();
+    const requestInfo = await getRequestInfo();
 
     const treasuryParams = {
       status: paymentStatus,
