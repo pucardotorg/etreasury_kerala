@@ -30,9 +30,9 @@ app.post(`${contextPath}`, async (req, res) => {
     const paymentStatus = returnParams.status;
 
     // Fetch Auth Token
-    let authToken;
+    let accessToken;
     try {
-      authToken = await getAuthForDristi();
+      accessToken = await getAuthForDristi();
     } catch (authError) {
       console.error("Failed to get Auth token:", authError);
       return res.status(500).send("Failed to get Auth token");
@@ -40,7 +40,7 @@ app.post(`${contextPath}`, async (req, res) => {
 
     const requestInfo = {
         apiId: "Rainmaker",
-        authToken: authToken
+        authToken: accessToken
     };  
 
     const treasuryParams = {
@@ -58,9 +58,12 @@ app.post(`${contextPath}`, async (req, res) => {
     // Send data to the backend service
     let backendResponse;
     try {
+      // Log the data to send
+      console.log("Data to send:", JSON.stringify(dataToSend, null, 2));
       backendResponse = await axios.post(`${serverUrl}/etreasury/payment/v1/_decryptTreasuryResponse`, dataToSend, {
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": "Basic ZWdvdi11c2VyLWNsaWVudDo="
         }
       });
       console.log("Backend response:", backendResponse.data);
@@ -109,6 +112,7 @@ async function getAuthForDristi() {
 
   try {
       const response = await axios.post(url, data, { headers });
+      console.log("Response data:", response.data); 
       const accessToken = response.data.access_token;
       return accessToken;
   } catch (error) {
