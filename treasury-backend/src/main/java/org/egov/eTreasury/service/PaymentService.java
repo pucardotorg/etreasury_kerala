@@ -112,7 +112,7 @@ public class PaymentService {
         return secretMap;
     }
 
-    public HtmlPage processPayment(ChallanData challanData, RequestInfo requestInfo) {
+    public Payload processPayment(ChallanData challanData, RequestInfo requestInfo) {
         try {
             // Authenticate and get secret map
             Map<String, String> secretMap = authenticate();
@@ -146,19 +146,16 @@ public class PaymentService {
             headers.setAuthToken(secretMap.get("authToken"));
             String headersData = objectMapper.writeValueAsString(headers);
 
-            // Call the service
-            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getChallanGenerateUrl(), String.class, MediaType.TEXT_HTML);
-            String htmlString = responseEntity.getBody();
-            String scriptTag = "\n<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>";
-            htmlString = scriptTag + htmlString;
-            return HtmlPage.builder().htmlString(htmlString).build();
+            return Payload.builder()
+                    .url(config.getChallanGenerateUrl())
+                    .data(postBody).headers(headersData).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
             throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF challan");
         }
     }
 
-    public HtmlPage doubleVerifyPayment(VerificationData verificationData, RequestInfo requestInfo) {
+    public Payload doubleVerifyPayment(VerificationData verificationData, RequestInfo requestInfo) {
         try {
             VerificationDetails verificationDetails = verificationData.getVerificationDetails();
             // Authenticate and get secret map
@@ -189,9 +186,9 @@ public class PaymentService {
             headers.setAuthToken(secretMap.get("authToken"));
             String headersData = objectMapper.writeValueAsString(headers);
 
-            // Call the service
-            ResponseEntity<String> responseEntity = callService(headersData, postBody, config.getDoubleVerificationUrl(), String.class, MediaType.TEXT_HTML);
-            return HtmlPage.builder().htmlString(responseEntity.getBody()).build();
+            return Payload.builder()
+                    .url(config.getDoubleVerificationUrl())
+                    .data(postBody).headers(headersData).build();
         } catch (Exception e) {
             log.error("Double verification Error: ", e);
             throw new CustomException("DOUBLE_VERIFICATION_ERROR", "Error occurred during double verification");

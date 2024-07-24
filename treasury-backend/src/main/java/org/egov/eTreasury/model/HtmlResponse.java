@@ -14,6 +14,6 @@ public class HtmlResponse {
     @JsonProperty("ResponseInfo")
     private ResponseInfo responseInfo;
 
-    @JsonProperty("htmlPage")
-    private HtmlPage htmlPage;
+    @JsonProperty("payload")
+    private Payload payload;
 }
