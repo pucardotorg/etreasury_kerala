@@ -36,7 +36,8 @@ app.post(`${contextPath}`, async (req, res) => {
       rek: returnParams.rek,
       data: returnParams.data,
       hmac: returnParams.hmac,
-      authToken: returnHeader.AuthToken
+      authToken: returnHeader.AuthToken,
+      tenantId: "kl"
     };
 
     const dataToSend = {
