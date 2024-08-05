@@ -3,13 +3,13 @@ package org.egov.eTreasury.model;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class TreasuryPaymentData {
 
     private String grn;

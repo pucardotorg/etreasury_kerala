@@ -304,12 +304,14 @@ public class PaymentService {
     }
 
     public void decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
+        log.info("Decrypting Treasury Payload for authToken: {}", treasuryParams.getAuthToken());
         try {
             Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
             if (optionalAuthSek.isPresent()) {
                 String decryptedSek = optionalAuthSek.get().getDecryptedSek();
                 String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
                 String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
+                log.info("Decrypted data: {}", decryptedData);
                 TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
                 PrintDetails printDetails = new PrintDetails(transactionDetails.getGrn());
                 Document document = printPayInSlip(printDetails, requestInfo);
@@ -399,6 +401,7 @@ public class PaymentService {
     }
 
     private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo, String fileStoreId) {
+        log.info("Updating payment status for billId: {}", authSek.getBillId());
         PaymentDetail paymentDetail = PaymentDetail.builder()
             .billId(authSek.getBillId())
             .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
@@ -424,6 +427,7 @@ public class PaymentService {
         }
         PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
         collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
+        log.info("Payment request sent to collections service: {}", paymentRequest);
     }
 
     private Long convertTimestampToMillis(String timestampStr) {

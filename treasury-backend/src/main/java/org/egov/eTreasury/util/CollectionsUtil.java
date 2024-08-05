@@ -1,5 +1,6 @@
 package org.egov.eTreasury.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.egov.eTreasury.model.PaymentRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
+@Slf4j
 public class CollectionsUtil {
     
     private final RestTemplate restTemplate;
@@ -28,6 +30,11 @@ public class CollectionsUtil {
 
         HttpEntity<PaymentRequest> requestEntity = new HttpEntity<>(request, headers);
 
-        return restTemplate.postForEntity(url.toString(), requestEntity, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url.toString(), requestEntity, String.class);
+
+        log.info("Payment service response: {}", responseEntity);
+        log.debug("Payment service response body: {}", responseEntity.getBody());
+
+        return responseEntity;
     }
 }
