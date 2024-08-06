@@ -37,4 +37,16 @@ public class TreasuryPaymentData {
     private String remarks;
 
     private String fileStoreId;
+
+    private String billId;
+
+    private double totalDue;
+
+    private String mobileNumber;
+
+    private String paidBy;
+
+    private String businessService;
+
+
 }
