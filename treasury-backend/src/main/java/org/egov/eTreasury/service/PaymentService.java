@@ -330,11 +330,16 @@ public class PaymentService {
                         .departmentId(transactionDetails.getDepartmentId())
                         .remarkStatus(transactionDetails.getRemarkStatus())
                         .fileStoreId(fileStoreId)
-                        .remarks(transactionDetails.getRemarks()).build();
+                        .remarks(transactionDetails.getRemarks())
+                        .billId(optionalAuthSek.get().getBillId())
+                        .businessService(optionalAuthSek.get().getBusinessService())
+                        .totalDue(optionalAuthSek.get().getTotalDue())
+                        .mobileNumber(optionalAuthSek.get().getMobileNumber())
+                        .paidBy(optionalAuthSek.get().getPaidBy()).build();
                 TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
                         .requestInfo(requestInfo).treasuryPaymentData(data).build();
                 producer.push("save-treasury-payment-data", request);
-                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
+//                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
             }
         } catch (Exception e) {
             log.error("Decrypt Treasury Response failed: ", e);
@@ -457,5 +462,34 @@ public class PaymentService {
             log.error("No Payment data for given bill Id");
             throw new CustomException("PAYMENT_RECEIPT_INVALID_BILL_ID", "Given Bill Id Has no Payment Data");
         }
+    }
+
+    public void callCollectionServiceAndUpdatePayment(TreasuryPaymentRequest request) {
+
+        PaymentDetail paymentDetail = PaymentDetail.builder()
+                .billId(request.getTreasuryPaymentData().getBillId())
+                .totalDue(BigDecimal.valueOf(request.getTreasuryPaymentData().getTotalDue()))
+                .totalAmountPaid(new BigDecimal(String.valueOf(request.getTreasuryPaymentData().getAmount())))
+                .businessService(request.getTreasuryPaymentData().getBusinessService()).build();
+        Payment payment = Payment.builder()
+                .tenantId(config.getEgovStateTenantId())
+                .paymentDetails(Collections.singletonList(paymentDetail))
+                .payerName(request.getTreasuryPaymentData().getPartyName())
+                .paidBy(request.getTreasuryPaymentData().getPaidBy())
+                .mobileNumber(request.getTreasuryPaymentData().getMobileNumber())
+                .transactionNumber(request.getTreasuryPaymentData().getGrn())
+                .transactionDate(convertTimestampToMillis(request.getTreasuryPaymentData().getChallanTimestamp()))
+                .instrumentNumber(request.getTreasuryPaymentData().getBankRefNo())
+                .instrumentDate(convertTimestampToMillis(request.getTreasuryPaymentData().getBankTimestamp()))
+                .totalAmountPaid(new BigDecimal(String.valueOf(request.getTreasuryPaymentData().getAmount())))
+                .paymentMode("ONLINE")
+                .fileStoreId(request.getTreasuryPaymentData().getFileStoreId())
+                .build();
+        String paymentStatus = String.valueOf(request.getTreasuryPaymentData().getStatus());
+        if (paymentStatus.equals("Y")) {
+            payment.setPaymentStatus("DEPOSITED");
+        }
+        PaymentRequest paymentRequest = new PaymentRequest(request.getRequestInfo(), payment);
+        collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
     }
 }
