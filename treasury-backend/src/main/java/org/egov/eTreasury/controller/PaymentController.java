@@ -26,7 +26,7 @@ public class PaymentController {
     }
 
     @PostMapping("/v1/_verifyConnection")
-    public ConnectionResponse verifyServerConnection(@RequestBody RequestInfo request) {
+    public ConnectionResponse verifyServerConnection(@RequestParam(value = "tenantId", required = false) String tenantId,@RequestBody RequestInfo request) {
         log.info("Verifying Server Connection for request: {}", request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request, true);
         ConnectionStatus connectionStatus = paymentService.verifyConnection();

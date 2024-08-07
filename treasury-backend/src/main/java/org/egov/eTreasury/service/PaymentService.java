@@ -72,9 +72,9 @@ public class PaymentService {
 
     public ConnectionStatus verifyConnection() {
         try {
-            ResponseEntity<ConnectionStatus> responseEntity = treasuryUtil.callConnectionService(config.getServerStatusUrl(), ConnectionStatus.class);
+            ResponseEntity<String> responseEntity = treasuryUtil.callConnectionService(config.getServerStatusUrl(), String.class);
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
-                return responseEntity.getBody();
+                return objectMapper.readValue(responseEntity.getBody(), ConnectionStatus.class);
             } else {
                 throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
             }
