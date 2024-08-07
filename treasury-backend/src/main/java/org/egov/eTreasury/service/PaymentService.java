@@ -155,45 +155,45 @@ public class PaymentService {
         }
     }
 
-    public Payload doubleVerifyPayment(VerificationData verificationData, RequestInfo requestInfo) {
-        try {
-            VerificationDetails verificationDetails = verificationData.getVerificationDetails();
-            // Authenticate and get secret map
-            Map<String, String> secretMap = authenticate();
-
-            // Decrypt the SEK using the appKey
-            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
-            AuthSek authSek = AuthSek.builder()
-                    .authToken(secretMap.get("authToken"))
-                    .decryptedSek(decryptedSek)
-                    .billId(verificationData.getBillId())
-                    .businessService(verificationData.getBusinessService())
-                    .serviceNumber(verificationData.getServiceNumber())
-                    .totalDue(verificationData.getTotalDue())
-                    .paidBy(verificationData.getPaidBy())
-                    .sessionTime(System.currentTimeMillis())
-                    .departmentId(verificationDetails.getDepartmentId()).build();
-            saveAuthTokenAndSek(requestInfo, authSek);
-
-            // Prepare the request body
-            verificationDetails.setOfficeCode(config.getOfficeCode());
-            verificationDetails.setServiceDeptCode(config.getServiceDeptCode());
-            String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(verificationDetails));
-
-            // Prepare headers
-            Headers headers = new Headers();
-            headers.setClientId(config.getClientId());
-            headers.setAuthToken(secretMap.get("authToken"));
-            String headersData = objectMapper.writeValueAsString(headers);
-
-            return Payload.builder()
-                    .url(config.getDoubleVerificationUrl())
-                    .data(postBody).headers(headersData).build();
-        } catch (Exception e) {
-            log.error("Double verification Error: ", e);
-            throw new CustomException("DOUBLE_VERIFICATION_ERROR", "Error occurred during double verification");
-        }
-    }
+//    public Payload doubleVerifyPayment(VerificationData verificationData, RequestInfo requestInfo) {
+//        try {
+//            VerificationDetails verificationDetails = verificationData.getVerificationDetails();
+//            // Authenticate and get secret map
+//            Map<String, String> secretMap = authenticate();
+//
+//            // Decrypt the SEK using the appKey
+//            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+//            AuthSek authSek = AuthSek.builder()
+//                    .authToken(secretMap.get("authToken"))
+//                    .decryptedSek(decryptedSek)
+//                    .billId(verificationData.getBillId())
+//                    .businessService(verificationData.getBusinessService())
+//                    .serviceNumber(verificationData.getServiceNumber())
+//                    .totalDue(verificationData.getTotalDue())
+//                    .paidBy(verificationData.getPaidBy())
+//                    .sessionTime(System.currentTimeMillis())
+//                    .departmentId(verificationDetails.getDepartmentId()).build();
+//            saveAuthTokenAndSek(requestInfo, authSek);
+//
+//            // Prepare the request body
+//            verificationDetails.setOfficeCode(config.getOfficeCode());
+//            verificationDetails.setServiceDeptCode(config.getServiceDeptCode());
+//            String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(verificationDetails));
+//
+//            // Prepare headers
+//            Headers headers = new Headers();
+//            headers.setClientId(config.getClientId());
+//            headers.setAuthToken(secretMap.get("authToken"));
+//            String headersData = objectMapper.writeValueAsString(headers);
+//
+//            return Payload.builder()
+//                    .url(config.getDoubleVerificationUrl())
+//                    .data(postBody).headers(headersData).build();
+//        } catch (Exception e) {
+//            log.error("Double verification Error: ", e);
+//            throw new CustomException("DOUBLE_VERIFICATION_ERROR", "Error occurred during double verification");
+//        }
+//    }
 
     public Document printPayInSlip(PrintDetails printDetails, RequestInfo requestInfo) {
         try {
@@ -227,81 +227,81 @@ public class PaymentService {
         }
     }
 
-    public TransactionDetails fetchTransactionDetails(TransactionDetails transactionDetails, RequestInfo requestInfo) {
-        try {
-            // Authenticate and get secret map
-            Map<String, String> secretMap = authenticate();
+//    public TransactionDetails fetchTransactionDetails(TransactionDetails transactionDetails, RequestInfo requestInfo) {
+//        try {
+//            // Authenticate and get secret map
+//            Map<String, String> secretMap = authenticate();
+//
+//            // Decrypt the SEK using the appKey
+//            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+//
+//            // Prepare the request body
+//            transactionDetails.setDepartmentId(config.getDeptReferenceId());
+//            String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(transactionDetails));
+//
+//            // Prepare headers
+//            Headers headers = new Headers();
+//            headers.setClientId(config.getClientId());
+//            headers.setAuthToken(secretMap.get("authToken"));
+//            String headersData = objectMapper.writeValueAsString(headers);
+//
+//            // Call the service
+//            ResponseEntity<TransactionDetails> responseEntity = callService(headersData, postBody, config.getTransactionDetailsUrl(), TransactionDetails.class, MediaType.APPLICATION_JSON);
+//            return objectMapper.convertValue(responseEntity.getBody(), TransactionDetails.class);
+//        } catch (Exception e) {
+//            log.error("Transaction details retrieval failed: ", e);
+//            throw new CustomException("TRANSACTION_DETAILS_ERROR", "Error ccurred during transaction details retrieval");
+//        }
+//    }
 
-            // Decrypt the SEK using the appKey
-            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+//    public RefundData processRefund(RefundDetails refundDetails, RequestInfo requestInfo) {
+//        try {
+//            // Authenticate and get secret map
+//            Map<String, String> secretMap = authenticate();
+//
+//            // Decrypt the SEK using the appKey
+//            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+//
+//            // Prepare the request body
+//            String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundDetails));
+//
+//            // Call the service
+//            ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(), secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
+//            TreasuryResponse response = responseEntity.getBody();
+//            String decryptedRek = encryptionUtil.decryptResponse(response.getRek(), decryptedSek);
+//            String decryptedData = encryptionUtil.decryptResponse(response.getData(), decryptedRek);
+//
+//            return objectMapper.convertValue(decryptedData, RefundData.class);
+//        } catch (Exception e) {
+//            log.error("Refund Request failed: ", e);
+//            throw new CustomException("REFUND_REQUEST_ERROR", "Error occurred during  refund request");
+//        }
+//    }
 
-            // Prepare the request body
-            transactionDetails.setDepartmentId(config.getDeptReferenceId());
-            String postBody = generatePostBody(decryptedSek, objectMapper.writeValueAsString(transactionDetails));
-
-            // Prepare headers
-            Headers headers = new Headers();
-            headers.setClientId(config.getClientId());
-            headers.setAuthToken(secretMap.get("authToken"));
-            String headersData = objectMapper.writeValueAsString(headers);
-
-            // Call the service
-            ResponseEntity<TransactionDetails> responseEntity = callService(headersData, postBody, config.getTransactionDetailsUrl(), TransactionDetails.class, MediaType.APPLICATION_JSON);
-            return objectMapper.convertValue(responseEntity.getBody(), TransactionDetails.class);
-        } catch (Exception e) {
-            log.error("Transaction details retrieval failed: ", e);
-            throw new CustomException("TRANSACTION_DETAILS_ERROR", "Error ccurred during transaction details retrieval");
-        }
-    }
-
-    public RefundData processRefund(RefundDetails refundDetails, RequestInfo requestInfo) {
-        try {
-            // Authenticate and get secret map
-            Map<String, String> secretMap = authenticate();
-
-            // Decrypt the SEK using the appKey
-            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
-
-            // Prepare the request body
-            String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundDetails));
-
-            // Call the service
-            ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(), secretMap.get("authToken"), postBody, config.getRefundRequestUrl(), TreasuryResponse.class);
-            TreasuryResponse response = responseEntity.getBody();
-            String decryptedRek = encryptionUtil.decryptResponse(response.getRek(), decryptedSek);
-            String decryptedData = encryptionUtil.decryptResponse(response.getData(), decryptedRek);
-
-            return objectMapper.convertValue(decryptedData, RefundData.class);
-        } catch (Exception e) {
-            log.error("Refund Request failed: ", e);
-            throw new CustomException("REFUND_REQUEST_ERROR", "Error occurred during  refund request");
-        }
-    }
-
-    public RefundData checkRefundStatus(RefundStatus refundStatus, RequestInfo requestInfo) {
-        try {
-            // Authenticate and get secret map
-            Map<String, String> secretMap = authenticate();
-
-            // Decrypt the SEK using the appKey
-            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
-
-            // Prepare the request body
-            String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundStatus));
-
-            // Call the service
-            ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(),
-            secretMap.get("authToken"), postBody, config.getRefundStatusUrl(), TreasuryResponse.class);
-            TreasuryResponse response = responseEntity.getBody();
-            String decryptedRek = encryptionUtil.decryptResponse(response.getRek(), decryptedSek);
-            String decryptedData = encryptionUtil.decryptResponse(response.getData(), decryptedRek);
-
-            return objectMapper.convertValue(decryptedData, RefundData.class);
-        } catch (Exception e) {
-            log.error("Refund Request failed: ", e);
-            throw new CustomException("REFUND_REQUEST_ERROR", "Error occurred during  refund request");
-        }
-    }
+//    public RefundData checkRefundStatus(RefundStatus refundStatus, RequestInfo requestInfo) {
+//        try {
+//            // Authenticate and get secret map
+//            Map<String, String> secretMap = authenticate();
+//
+//            // Decrypt the SEK using the appKey
+//            String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
+//
+//            // Prepare the request body
+//            String postBody = generatePostBodyForRefund(decryptedSek, objectMapper.writeValueAsString(refundStatus));
+//
+//            // Call the service
+//            ResponseEntity<TreasuryResponse> responseEntity = treasuryUtil.callRefundService(config.getClientId(),
+//            secretMap.get("authToken"), postBody, config.getRefundStatusUrl(), TreasuryResponse.class);
+//            TreasuryResponse response = responseEntity.getBody();
+//            String decryptedRek = encryptionUtil.decryptResponse(response.getRek(), decryptedSek);
+//            String decryptedData = encryptionUtil.decryptResponse(response.getData(), decryptedRek);
+//
+//            return objectMapper.convertValue(decryptedData, RefundData.class);
+//        } catch (Exception e) {
+//            log.error("Refund Request failed: ", e);
+//            throw new CustomException("REFUND_REQUEST_ERROR", "Error occurred during  refund request");
+//        }
+//    }
 
     public void decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
         log.info("Decrypting Treasury Payload for authToken: {}", treasuryParams.getAuthToken());
@@ -380,60 +380,60 @@ public class PaymentService {
         }
     }
 
-    private String generatePostBodyForRefund(String decryptedSek, String jsonData) {
-        try {
-            // Convert SEK to AES key
-            SecretKey aesKey = new SecretKeySpec(decryptedSek.getBytes(StandardCharsets.UTF_8), "AES");
+//    private String generatePostBodyForRefund(String decryptedSek, String jsonData) {
+//        try {
+//            // Convert SEK to AES key
+//            SecretKey aesKey = new SecretKeySpec(decryptedSek.getBytes(StandardCharsets.UTF_8), "AES");
+//
+//            // Initialize AES cipher in encryption mode
+//            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+//            aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
+//
+//            // Encrypt JSON data
+//            byte[] encryptedDataBytes = aesCipher.doFinal(jsonData.getBytes(StandardCharsets.UTF_8));
+//            String encryptedData = Base64.getEncoder().encodeToString(encryptedDataBytes);
+//
+//            // Generate HMAC using JSON data and SEK
+//            String hmac = encryptionUtil.generateHMAC(jsonData, decryptedSek);
+//
+//            // Create PostBody object and convert to JSON string
+//            RefundPostBody refundPostBody = new RefundPostBody(hmac, encryptedData);
+//            return objectMapper.writeValueAsString(refundPostBody);
+//        } catch (Exception e) {
+//            log.error("Error during post body generation: ", e);
+//            throw new CustomException("POST_BODY_GENERATION_ERROR", "Error occurred generating post body");
+//        }
+//    }
 
-            // Initialize AES cipher in encryption mode
-            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
-
-            // Encrypt JSON data
-            byte[] encryptedDataBytes = aesCipher.doFinal(jsonData.getBytes(StandardCharsets.UTF_8));
-            String encryptedData = Base64.getEncoder().encodeToString(encryptedDataBytes);
-
-            // Generate HMAC using JSON data and SEK
-            String hmac = encryptionUtil.generateHMAC(jsonData, decryptedSek);
-
-            // Create PostBody object and convert to JSON string
-            RefundPostBody refundPostBody = new RefundPostBody(hmac, encryptedData);
-            return objectMapper.writeValueAsString(refundPostBody);
-        } catch (Exception e) {
-            log.error("Error during post body generation: ", e);
-            throw new CustomException("POST_BODY_GENERATION_ERROR", "Error occurred generating post body");
-        }
-    }
-
-    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo, String fileStoreId) {
-        log.info("Updating payment status for billId: {}", authSek.getBillId());
-        PaymentDetail paymentDetail = PaymentDetail.builder()
-            .billId(authSek.getBillId())
-            .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
-            .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
-            .businessService(authSek.getBusinessService()).build();
-        Payment payment = Payment.builder()
-            .tenantId(config.getEgovStateTenantId())
-            .paymentDetails(Collections.singletonList(paymentDetail))
-            .payerName(transactionDetails.getPartyName())
-            .paidBy(authSek.getPaidBy())
-            .mobileNumber(authSek.getMobileNumber())
-            .transactionNumber(transactionDetails.getGrn())
-            .transactionDate(convertTimestampToMillis(transactionDetails.getChallanTimestamp()))
-            .instrumentNumber(transactionDetails.getBankRefNo())
-            .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
-            .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
-            .paymentMode("ONLINE")
-            .fileStoreId(fileStoreId)
-            .build();
-        String paymentStatus = transactionDetails.getStatus();
-        if (paymentStatus.equals("Y")) {
-            payment.setPaymentStatus("DEPOSITED");
-        }
-        PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
-        collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
-        log.info("Payment request sent to collections service: {}", paymentRequest);
-    }
+//    private void updatePaymentStatus(AuthSek authSek, TransactionDetails transactionDetails, RequestInfo requestInfo, String fileStoreId) {
+//        log.info("Updating payment status for billId: {}", authSek.getBillId());
+//        PaymentDetail paymentDetail = PaymentDetail.builder()
+//            .billId(authSek.getBillId())
+//            .totalDue(BigDecimal.valueOf(authSek.getTotalDue()))
+//            .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
+//            .businessService(authSek.getBusinessService()).build();
+//        Payment payment = Payment.builder()
+//            .tenantId(config.getEgovStateTenantId())
+//            .paymentDetails(Collections.singletonList(paymentDetail))
+//            .payerName(transactionDetails.getPartyName())
+//            .paidBy(authSek.getPaidBy())
+//            .mobileNumber(authSek.getMobileNumber())
+//            .transactionNumber(transactionDetails.getGrn())
+//            .transactionDate(convertTimestampToMillis(transactionDetails.getChallanTimestamp()))
+//            .instrumentNumber(transactionDetails.getBankRefNo())
+//            .instrumentDate(convertTimestampToMillis(transactionDetails.getBankTimestamp()))
+//            .totalAmountPaid(new BigDecimal(transactionDetails.getAmount()))
+//            .paymentMode("ONLINE")
+//            .fileStoreId(fileStoreId)
+//            .build();
+//        String paymentStatus = transactionDetails.getStatus();
+//        if (paymentStatus.equals("Y")) {
+//            payment.setPaymentStatus("DEPOSITED");
+//        }
+//        PaymentRequest paymentRequest = new PaymentRequest(requestInfo, payment);
+//        collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
+//        log.info("Payment request sent to collections service: {}", paymentRequest);
+//    }
 
     private Long convertTimestampToMillis(String timestampStr) {
         List<DateTimeFormatter> formatters = new ArrayList<>();
