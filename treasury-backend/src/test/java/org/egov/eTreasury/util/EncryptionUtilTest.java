@@ -1,113 +1,97 @@
 package org.egov.eTreasury.util;
 
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-@ExtendWith(MockitoExtension.class)
-class EncryptionUtilTest {
+import static org.junit.jupiter.api.Assertions.*;
+
+public class EncryptionUtilTest {
 
     @InjectMocks
     private EncryptionUtil encryptionUtil;
 
-    @Test
-    void testGetClientSecretAndAppKey() throws Exception {
-        // Arrange
-        String clientSecret = "your_client_secret";
-        String publicKeyString = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq2sGa9hc9BGBV5OLkjMjxUU+1ZsNI1MXgHtbVF3q7/SbRYXxvXUTX5bFZDvHo4tVTl6xoE2sIjoxnHVqq2JGXPVD"; // Example public key
-
-        // Act
-        Map<String, String> secretMap = encryptionUtil.getClientSecretAndAppKey(clientSecret, publicKeyString);
-
-        // Assert
-        Assertions.assertNotNull(secretMap);
-        Assertions.assertNotNull(secretMap.get("appKey"));
-        Assertions.assertNotNull(secretMap.get("encryptedClientSecret"));
-        Assertions.assertNotNull(secretMap.get("encodedAppKey"));
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testDecryptAES() throws Exception {
-        // Arrange
-        String encryptedData = "encrypted_data";
-        String key = "your_base64_encoded_key";
+    void testGetClientSecretAndAppKey() throws Exception {
+        String clientSecret = "testClientSecret";
+        String publicKeyString = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB";
 
-        // Act
-        String decryptedData = encryptionUtil.decryptAES(encryptedData, key);
+        Map<String, String> result = encryptionUtil.getClientSecretAndAppKey(clientSecret, publicKeyString);
 
-        // Assert
-        Assertions.assertNotNull(decryptedData);
+        assertNotNull(result);
+        assertTrue(result.containsKey("appKey"));
+        assertTrue(result.containsKey("encryptedClientSecret"));
+        assertTrue(result.containsKey("encodedAppKey"));
+
+        assertNotEquals(clientSecret, result.get("encryptedClientSecret"));
+        assertNotEquals(result.get("appKey"), result.get("encodedAppKey"));
+    }
+
+    @Test
+    void testGetPublicKeyFromString() throws Exception {
+        String publicKeyString = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB";
+
+        Method method = EncryptionUtil.class.getDeclaredMethod("getPublicKeyFromString", String.class);
+        method.setAccessible(true);
+
+        assertDoesNotThrow(() -> method.invoke(encryptionUtil, publicKeyString));
     }
 
     @Test
     void testGenerateHMAC() throws Exception {
-        // Arrange
-        String data = "data_to_sign";
-        String key = "your_hmac_key";
+        String data = "Test data for HMAC";
+        String key = "testKey";
 
-        // Act
         String hmac = encryptionUtil.generateHMAC(data, key);
 
-        // Assert
-        Assertions.assertNotNull(hmac);
-        Assertions.assertTrue(hmac.length() > 0);
+        assertNotNull(hmac);
+        assertNotEquals(data, hmac);
     }
 
     @Test
     void testDecryptResponse() throws Exception {
-        // Arrange
-        String encryptedData = "encrypted_response_data";
-        String key = "your_aes_key";
+        String originalData = "Test data for encryption";
+        String key = "1234567890123456"; // 16 bytes for AES-128
 
-        // Act
+        // Encrypt the data first
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        String encryptedData = Base64.getEncoder().encodeToString(cipher.doFinal(originalData.getBytes()));
+
+        // Now decrypt
         String decryptedData = encryptionUtil.decryptResponse(encryptedData, key);
 
-        // Assert
-        Assertions.assertNotNull(decryptedData);
+        assertEquals(originalData, decryptedData);
     }
 
-//    @Test
-//    void testGetPublicKeyFromString() throws NoSuchAlgorithmException, InvalidKeySpecException {
-//        // Arrange
-//        String publicKeyString = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq2sGa9hc9BGBV5OLkjMjxUU+1ZsNI1MXgHtbVF3q7/SbRYXxvXUTX5bFZDvHo4tVTl6xoE2sIjoxnHVqq2JGXPVD";
-//
-//        // Act
-//        PublicKey publicKey = encryptionUtil.getPublicKeyFromString(publicKeyString);
-//
-//        // Assert
-//        Assertions.assertNotNull(publicKey);
-//        Assertions.assertTrue(publicKey instanceof PublicKey);
-//    }
-//
-//    @Test
-//    void testGetPublicKeyFromString_ThrowsException() {
-//        // Arrange
-//        String invalidPublicKeyString = "invalid_public_key";
-//
-//        // Act and Assert
-//        Assertions.assertThrows(InvalidKeySpecException.class, () -> encryptionUtil.getPublicKeyFromString(invalidPublicKeyString));
-//    }
+    @Test
+    void testDecryptAES() throws Exception {
+        String originalData = "Test data for encryption";
+        String key = Base64.getEncoder().encodeToString("1234567890123456".getBytes()); // 16 bytes for AES-128
 
-//    @Test
-//    void testBytesToEncodedString() {
-//        // Arrange
-//        byte[] bytes = {0x01, 0x02, 0x03};
-//
-//        // Act
-//        String encodedString = encryptionUtil.bytesToEncodedString(bytes);
-//
-//        // Assert
-//        Assertions.assertNotNull(encodedString);
-//        Assertions.assertTrue(encodedString.length() > 0);
-//    }
+        // Encrypt the data first
+        SecretKeySpec secretKey = new SecretKeySpec(Base64.getDecoder().decode(key), "AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        String encryptedData = Base64.getEncoder().encodeToString(cipher.doFinal(originalData.getBytes()));
+
+        // Now decrypt
+        String decryptedData = encryptionUtil.decryptAES(encryptedData, key);
+
+        assertEquals(originalData, decryptedData);
+    }
 }
