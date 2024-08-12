@@ -13,7 +13,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.egov.eTreasury.config.ServiceConstants.transformation;
+import static org.egov.eTreasury.config.ServiceConstants.TRANSFORMATION;
 
 @Component
 @Slf4j
@@ -35,7 +35,7 @@ public class EncryptionUtil {
 
         // Encrypt the ClientSecret using AES
         SecretKeySpec aesKey = new SecretKeySpec(appKey, "AES");
-        Cipher aesCipher = Cipher.getInstance(transformation);
+        Cipher aesCipher = Cipher.getInstance(TRANSFORMATION);
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
         byte[] encryptedClientSecretBytes = aesCipher.doFinal(clientSecretBytes);
 
@@ -61,16 +61,16 @@ public class EncryptionUtil {
         return keyFactory.generatePublic(keySpec);
     }
 
-    public String decryptAES(String encryptedData, String key) throws Exception {
+    public String decryptAES(String encryptedData, String key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
-        Cipher cipher = Cipher.getInstance(transformation);
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
         return new String(decryptedBytes, StandardCharsets.UTF_8);
     }
 
-    public String generateHMAC(String data, String key) throws Exception {
+    public String generateHMAC(String data, String key) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac sha256Hmac = Mac.getInstance("HmacSHA256");
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         sha256Hmac.init(secretKey);
@@ -86,9 +86,9 @@ public class EncryptionUtil {
         return Base64.getEncoder().encodeToString(result.toString().getBytes());
     }
 
-    public String decryptResponse(String encryptedData, String key) throws Exception {
+    public String decryptResponse(String encryptedData, String key) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
-        Cipher cipher = Cipher.getInstance(transformation);
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
         return new String(decryptedBytes, StandardCharsets.UTF_8);
