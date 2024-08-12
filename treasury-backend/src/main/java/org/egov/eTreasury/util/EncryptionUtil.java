@@ -3,8 +3,7 @@ package org.egov.eTreasury.util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.Cipher;
-import javax.crypto.Mac;
+import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -14,11 +13,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.egov.eTreasury.config.ServiceConstants.transformation;
+
 @Component
 @Slf4j
 public class EncryptionUtil {
 
-    public Map<String, String> getClientSecretAndAppKey(String clientSecret, String publicKeyString) throws Exception{
+    public Map<String, String> getClientSecretAndAppKey(String clientSecret, String publicKeyString) throws NoSuchAlgorithmException, NoSuchPaddingException,InvalidKeySpecException,InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         Map<String, String> secretMap = new HashMap<>();
 
@@ -34,7 +35,7 @@ public class EncryptionUtil {
 
         // Encrypt the ClientSecret using AES
         SecretKeySpec aesKey = new SecretKeySpec(appKey, "AES");
-        Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        Cipher aesCipher = Cipher.getInstance(transformation);
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
         byte[] encryptedClientSecretBytes = aesCipher.doFinal(clientSecretBytes);
 
@@ -63,7 +64,7 @@ public class EncryptionUtil {
     public String decryptAES(String encryptedData, String key) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(key);
         SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
         return new String(decryptedBytes, StandardCharsets.UTF_8);
@@ -87,7 +88,7 @@ public class EncryptionUtil {
 
     public String decryptResponse(String encryptedData, String key) throws Exception {
         SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
         return new String(decryptedBytes, StandardCharsets.UTF_8);

@@ -1,6 +1,7 @@
 package org.egov.eTreasury.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import org.egov.common.contract.models.Document;
@@ -9,7 +10,6 @@ import org.egov.common.contract.response.ResponseInfo;
 import org.egov.eTreasury.model.*;
 import org.egov.eTreasury.service.PaymentService;
 import org.egov.eTreasury.util.ResponseInfoFactory;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,12 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.web.servlet.MockMvc;
 
 @ExtendWith(MockitoExtension.class)
-public class PaymentControllerTest {
-
-    private MockMvc mockMvc;
+class PaymentControllerTest {
 
     @Mock
     private PaymentService paymentService;
@@ -33,20 +30,11 @@ public class PaymentControllerTest {
     @InjectMocks
     private PaymentController paymentController;
 
-    @BeforeEach
-    public void setup() {
-
-    }
-
     @Test
-    public void testVerifyServerConnection(){
+    void testVerifyServerConnection(){
         // Arrange
         ConnectionStatus connectionStatus = ConnectionStatus.builder().status("success").build();
         ResponseInfo responseInfo = new ResponseInfo();
-        ConnectionResponse expectedResponse = ConnectionResponse.builder()
-                .responseInfo(responseInfo)
-                .connectionStatus(connectionStatus)
-                .build();
 
         when(responseInfoFactory.createResponseInfoFromRequestInfo(any(RequestInfo.class), anyBoolean()))
                 .thenReturn(responseInfo);
@@ -62,66 +50,43 @@ public class PaymentControllerTest {
     }
 
     @Test
-    public void testProcessPayment(){
+    void testProcessPayment(){
         // Arrange
         Payload payload = new Payload();
-        ResponseInfo responseInfo = new ResponseInfo();
-        HtmlResponse expectedResponse = HtmlResponse.builder()
-                .payload(payload)
-                .responseInfo(responseInfo)
-                .build();
 
-//        when(responseInfoFactory.createResponseInfoFromRequestInfo(any(RequestInfo.class), eq(false)))
-//                .thenReturn(responseInfo);
         when(paymentService.processPayment(any(), any())).thenReturn(payload);
 
         // Act
         HtmlResponse responseEntity = paymentController.processPayment(new ChallanRequest());
 
-
+        // Assert
+        assertNotNull(responseEntity);
     }
 
     @Test
-    public void testPrintPayInSlip() {
+    void testPrintPayInSlip() {
         // Arrange
         Document document = new Document();
-        ResponseInfo responseInfo = new ResponseInfo();
-        PrintResponse expectedResponse = PrintResponse.builder()
-                .responseInfo(responseInfo)
-                .document(document)
-                .build();
-
-
 
         when(paymentService.printPayInSlip(any(), any())).thenReturn(document);
 
         // Act
         PrintResponse responseEntity = paymentController.printPayInSlip(new PrintRequest());
 
-
+        // Assert
+        assertNotNull(responseEntity);
     }
 
     @Test
-    public void testDecryptTreasuryResponse() {
-        // Arrange
-        ResponseInfo responseInfo = new ResponseInfo();
-
-        // Act
+    void testDecryptTreasuryResponse() {
         ResponseEntity<ResponseInfo> responseEntity = paymentController.decryptTreasuryResponse(new TreasuryRequest());
-
-        // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
-    public void testGetTreasuryPaymentReceipt() throws Exception {
+    void testGetTreasuryPaymentReceipt() {
         // Arrange
         Document document = new Document();
-        ResponseInfo responseInfo = new ResponseInfo();
-        PrintResponse expectedResponse = PrintResponse.builder()
-                .responseInfo(responseInfo)
-                .document(document)
-                .build();
 
 
         when(paymentService.getTreasuryPaymentData(anyString())).thenReturn(document);
@@ -133,7 +98,6 @@ public class PaymentControllerTest {
         );
 
         // Assert
-//        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-//        assertEquals(expectedResponse, responseEntity.getBody());
+        assertNotNull(responseEntity);
     }
 }

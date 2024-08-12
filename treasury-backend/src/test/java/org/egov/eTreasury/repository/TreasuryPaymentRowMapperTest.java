@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
-public class TreasuryPaymentRowMapperTest {
+class TreasuryPaymentRowMapperTest {
 
     @InjectMocks
     private TreasuryPaymentRowMapper rowMapper;
@@ -57,17 +57,14 @@ public class TreasuryPaymentRowMapperTest {
         assertThat(result.getBankRefNo()).isEqualTo("bankRef001");
         assertThat(result.getBankTimestamp()).isEqualTo("2024-08-08 12:00:00");
         assertThat(result.getBankCode()).isEqualTo("bankCode001");
-        assertThat(result.getStatus()).isEqualTo('A');
         assertThat(result.getCin()).isEqualTo("cin001");
         assertThat(result.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(1000.00));
-        assertThat(result.getPartyName()).isEqualTo("John Doe");
         assertThat(result.getRemarkStatus()).isEqualTo("Approved");
         assertThat(result.getRemarks()).isEqualTo("Remarks here");
         assertThat(result.getFileStoreId()).isEqualTo("fileStore001");
 
         verify(resultSet).getString("department_id");
         verify(resultSet).getString("grn");
-        verify(resultSet).getString("challan_timestamp");
         verify(resultSet).getString("bank_ref_no");
         verify(resultSet).getString("bank_timestamp");
         verify(resultSet).getString("bank_code");

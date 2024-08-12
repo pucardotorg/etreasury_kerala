@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServiceConstants {
 
+    private ServiceConstants() {
+    }
+
     public static final String EXTERNAL_SERVICE_EXCEPTION = "External Service threw an Exception: ";
     public static final String SEARCHER_SERVICE_EXCEPTION = "Exception while fetching from searcher: ";
 
@@ -46,5 +49,7 @@ public class ServiceConstants {
     public static final String TENANTID = "?tenantId=";
     public static final String BUSINESS_SERVICES = "&businessServices=";
 
+    public static final String AUTH_TOKEN = "authToken";
 
+    public static final String transformation = "AES/ECB/PKCS5Padding";
 }

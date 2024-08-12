@@ -37,7 +37,7 @@ public class ETreasuryUtil {
         return restTemplate.postForEntity(url, requestEntity, responseType);
     }
 
-    public ResponseEntity<?> callAuthService(String clientId, String clientSecret, String payload, String url) {
+    public ResponseEntity<Object> callAuthService(String clientId, String clientSecret, String payload, String url) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         httpHeaders.setAccept(Collections.singletonList(MediaType.ALL));

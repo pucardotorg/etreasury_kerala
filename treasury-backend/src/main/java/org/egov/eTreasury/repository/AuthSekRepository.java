@@ -25,11 +25,10 @@ public class AuthSekRepository {
         this.rowMapper = rowMapper;
     }
 
-    @SuppressWarnings("deprecation")
     public List<AuthSek> getAuthSek(String authToken) {
         List<String> preparedStmtList = new ArrayList<>();
         String query = queryBuilder.getAuthSekQuery(authToken, preparedStmtList);
-        log.debug("Final query: " + query);
-        return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
+        log.debug("Final query: {}", query);
+        return jdbcTemplate.query(query, rowMapper, preparedStmtList.toArray());
     }
 }

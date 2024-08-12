@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class CollectionsUtilTest {
+class CollectionsUtilTest {
 
     @Mock
     private RestTemplate restTemplate;
@@ -23,7 +23,7 @@ public class CollectionsUtilTest {
     private CollectionsUtil collectionsUtil;
 
     @Test
-    public void testCallService() {
+    void testCallService() {
         // Arrange
         PaymentRequest paymentRequest = new PaymentRequest();
         String collectionsUrl = "http://example.com";

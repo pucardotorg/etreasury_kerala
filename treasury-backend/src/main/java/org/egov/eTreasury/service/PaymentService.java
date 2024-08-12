@@ -29,6 +29,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static org.egov.eTreasury.config.ServiceConstants.AUTH_TOKEN;
+
 @Service
 @Slf4j
 public class PaymentService {
@@ -101,7 +103,7 @@ public class PaymentService {
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 AuthResponse response = objectMapper.convertValue(responseEntity.getBody(), AuthResponse.class);
                 secretMap.put("sek", response.getData().getSek());
-                secretMap.put("authToken", response.getData().getAuthToken());
+                secretMap.put(AUTH_TOKEN, response.getData().getAuthToken());
             } else {
                throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
             }
@@ -122,7 +124,7 @@ public class PaymentService {
 
             String departmentId = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
             AuthSek authSek = AuthSek.builder()
-                    .authToken(secretMap.get("authToken"))
+                    .authToken(secretMap.get(AUTH_TOKEN))
                     .decryptedSek(decryptedSek)
                     .billId(challanData.getBillId())
                     .businessService(challanData.getBusinessService())
@@ -143,7 +145,7 @@ public class PaymentService {
             // Prepare headers
             Headers headers = new Headers();
             headers.setClientId(config.getClientId());
-            headers.setAuthToken(secretMap.get("authToken"));
+            headers.setAuthToken(secretMap.get(AUTH_TOKEN));
             String headersData = objectMapper.writeValueAsString(headers);
 
             return Payload.builder()
@@ -209,7 +211,7 @@ public class PaymentService {
             // Prepare headers
             Headers headers = new Headers();
             headers.setClientId(config.getClientId());
-            headers.setAuthToken(secretMap.get("authToken"));
+            headers.setAuthToken(secretMap.get(AUTH_TOKEN));
             String headersData = objectMapper.writeValueAsString(headers);
 
             // Call the service

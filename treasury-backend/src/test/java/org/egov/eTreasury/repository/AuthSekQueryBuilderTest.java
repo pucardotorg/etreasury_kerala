@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-public class AuthSekQueryBuilderTest {
+class AuthSekQueryBuilderTest {
 
     private AuthSekQueryBuilder queryBuilder;
 
@@ -35,7 +35,6 @@ public class AuthSekQueryBuilderTest {
         assertThat(query).isEqualTo(
                 "SELECT auth_token, decrypted_sek, bill_id, business_service, service_number, total_due, mobile_number, paid_by, session_time, department_id  FROM auth_sek_session_data  WHERE  auth_token = ? ORDER BY session_time "
         );
-//        assertThat(preparedStmtList).containsExactly("testAuthToken");
     }
 
     @Test

@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @ExtendWith(MockitoExtension.class)
-public class TreasuryPaymentRepositoryTest {
+class TreasuryPaymentRepositoryTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -46,7 +46,7 @@ public class TreasuryPaymentRepositoryTest {
 
         // Mock behavior
         when(treasuryPaymentQueryBuilder.getTreasuryPaymentQuery(billId, preparedStmtList)).thenReturn(query);
-        when(jdbcTemplate.query(query, preparedStmtList.toArray(), treasuryPaymentRowMapper)).thenReturn(expectedResults);
+        when(jdbcTemplate.query(query, treasuryPaymentRowMapper, preparedStmtList.toArray())).thenReturn(expectedResults);
 
         // When
         List<TreasuryPaymentData> actualResults = treasuryPaymentRepository.getTreasuryPaymentData(billId);
@@ -54,29 +54,28 @@ public class TreasuryPaymentRepositoryTest {
         // Then
         assertThat(actualResults).isEqualTo(expectedResults);
         verify(treasuryPaymentQueryBuilder).getTreasuryPaymentQuery(billId, preparedStmtList);
-        verify(jdbcTemplate).query(query, preparedStmtList.toArray(), treasuryPaymentRowMapper);
+        verify(jdbcTemplate).query(query, treasuryPaymentRowMapper, preparedStmtList.toArray());
     }
 
     @Test
     void testGetTreasuryPaymentDataWithNullBillId() {
         // Given
-        String billId = null;
         List<String> preparedStmtList = new ArrayList<>();
         String query = "SELECT department_id, grn, challan_timestamp, bank_ref_no, bank_timestamp, bank_code, status, cin, amount, party_name, remark_status, remarks, file_store_id FROM treasury_payment_data";
         List<TreasuryPaymentData> expectedResults = new ArrayList<>();
         expectedResults.add(new TreasuryPaymentData()); // Add a sample TreasuryPaymentData object
 
         // Mock behavior
-        when(treasuryPaymentQueryBuilder.getTreasuryPaymentQuery(billId, preparedStmtList)).thenReturn(query);
-        when(jdbcTemplate.query(query, preparedStmtList.toArray(), treasuryPaymentRowMapper)).thenReturn(expectedResults);
+        when(treasuryPaymentQueryBuilder.getTreasuryPaymentQuery(null, preparedStmtList)).thenReturn(query);
+        when(jdbcTemplate.query(query, treasuryPaymentRowMapper, preparedStmtList.toArray())).thenReturn(expectedResults);
 
         // When
-        List<TreasuryPaymentData> actualResults = treasuryPaymentRepository.getTreasuryPaymentData(billId);
+        List<TreasuryPaymentData> actualResults = treasuryPaymentRepository.getTreasuryPaymentData(null);
 
         // Then
         assertThat(actualResults).isEqualTo(expectedResults);
-        verify(treasuryPaymentQueryBuilder).getTreasuryPaymentQuery(billId, preparedStmtList);
-        verify(jdbcTemplate).query(query, preparedStmtList.toArray(), treasuryPaymentRowMapper);
+        verify(treasuryPaymentQueryBuilder).getTreasuryPaymentQuery(null, preparedStmtList);
+        verify(jdbcTemplate).query(query, treasuryPaymentRowMapper, preparedStmtList.toArray());
     }
 }
 
