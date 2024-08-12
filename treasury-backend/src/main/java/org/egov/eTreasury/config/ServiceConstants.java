@@ -51,5 +51,5 @@ public class ServiceConstants {
 
     public static final String AUTH_TOKEN = "authToken";
 
-    public static final String transformation = "AES/ECB/PKCS5Padding";
+    public static final String TRANSFORMATION = "AES/ECB/PKCS5Padding";
 }

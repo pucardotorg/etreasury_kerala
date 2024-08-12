@@ -47,12 +47,8 @@ class IdgenUtilTest {
         String tenantId = "tenant1";
         String idName = "idName";
         String idFormat = "idFormat";
-        Integer count = 2;
+        int count = 2;
 
-        List<IdRequest> reqList = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            reqList.add(IdRequest.builder().idName(idName).format(idFormat).tenantId(tenantId).build());
-        }
 
         List<IdResponse> idResponses = new ArrayList<>();
         idResponses.add(IdResponse.builder().id("ID1").build());
