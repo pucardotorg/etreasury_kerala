@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class FileStorageUtilTest {
+class FileStorageUtilTest {
 
     @Mock
     private RestTemplate restTemplate;
@@ -113,8 +113,6 @@ public class FileStorageUtilTest {
 
         // Mock ObjectMapper
         JsonNode rootNode = mock(JsonNode.class);
-        JsonNode filesArray = mock(JsonNode.class);
-        JsonNode fileNode = mock(JsonNode.class);
         when(objectMapper.convertValue(responseEntity.getBody(), JsonNode.class)).thenReturn(rootNode);
         when(rootNode.has("files")).thenReturn(false);
         // Act

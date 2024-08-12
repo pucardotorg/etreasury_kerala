@@ -14,7 +14,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EncryptionUtilTest {
+class EncryptionUtilTest {
 
     @InjectMocks
     private EncryptionUtil encryptionUtil;

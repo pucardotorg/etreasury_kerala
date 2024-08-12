@@ -10,7 +10,7 @@ import java.util.List;
 @Slf4j
 public class TreasuryPaymentQueryBuilder {
 
-    private final String BASE_QUERY = "SELECT department_id, grn, challan_timestamp, bank_ref_no, bank_timestamp, bank_code, status, cin, amount, party_name, remark_status, remarks, file_store_id ";
+    private static final String BASE_QUERY = "SELECT department_id, grn, challan_timestamp, bank_ref_no, bank_timestamp, bank_code, status, cin, amount, party_name, remark_status, remarks, file_store_id ";
     private static final String FROM_TABLES = "FROM treasury_payment_data ";
 
     private static final String DEPARTMENT_ID_SUBQUERY = "SELECT department_id FROM auth_sek_session_data WHERE bill_id = ? ";

@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthSekRepositoryTest {
+class AuthSekRepositoryTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -46,7 +46,7 @@ public class AuthSekRepositoryTest {
 
         // Mock behavior
         when(queryBuilder.getAuthSekQuery(authToken, preparedStmtList)).thenReturn(query);
-        when(jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper)).thenReturn(expectedResults);
+        when(jdbcTemplate.query(query, rowMapper, preparedStmtList.toArray())).thenReturn(expectedResults);
 
         // When
         List<AuthSek> actualResults = authSekRepository.getAuthSek(authToken);
@@ -54,29 +54,28 @@ public class AuthSekRepositoryTest {
         // Then
         assertThat(actualResults).isEqualTo(expectedResults);
         verify(queryBuilder).getAuthSekQuery(authToken, preparedStmtList);
-        verify(jdbcTemplate).query(query, preparedStmtList.toArray(), rowMapper);
+        verify(jdbcTemplate).query(query, rowMapper, preparedStmtList.toArray());
     }
 
     @Test
     void testGetAuthSekWithNullAuthToken() {
         // Given
-        String authToken = null;
         List<String> preparedStmtList = new ArrayList<>();
         String query = "SELECT * FROM auth_sek_session_data";
         List<AuthSek> expectedResults = new ArrayList<>();
         expectedResults.add(new AuthSek()); // Add a sample AuthSek object
 
         // Mock behavior
-        when(queryBuilder.getAuthSekQuery(authToken, preparedStmtList)).thenReturn(query);
-        when(jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper)).thenReturn(expectedResults);
+        when(queryBuilder.getAuthSekQuery(null, preparedStmtList)).thenReturn(query);
+        when(jdbcTemplate.query(query, rowMapper, preparedStmtList.toArray())).thenReturn(expectedResults);
 
         // When
-        List<AuthSek> actualResults = authSekRepository.getAuthSek(authToken);
+        List<AuthSek> actualResults = authSekRepository.getAuthSek(null);
 
         // Then
         assertThat(actualResults).isEqualTo(expectedResults);
-        verify(queryBuilder).getAuthSekQuery(authToken, preparedStmtList);
-        verify(jdbcTemplate).query(query, preparedStmtList.toArray(), rowMapper);
+        verify(queryBuilder).getAuthSekQuery(null, preparedStmtList);
+        verify(jdbcTemplate).query(query, rowMapper, preparedStmtList.toArray());
     }
 }
 
