@@ -348,6 +348,7 @@ public class PaymentService {
                         .mobileNumber(optionalAuthSek.get().getMobileNumber())
                         .tenantId(config.getEgovStateTenantId())
                         .paidBy(optionalAuthSek.get().getPaidBy()).build();
+                requestInfo.getUserInfo().setTenantId(config.getEgovStateTenantId());
                 TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
                         .requestInfo(requestInfo).treasuryPaymentData(data).build();
                 String fileStore = printPayInSlipPdf(request);
