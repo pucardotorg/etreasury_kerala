@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 @ToString
 public class TreasuryPaymentData {
 
+    private String tenantId;
+
     private String grn;
 
     private String challanTimestamp;
