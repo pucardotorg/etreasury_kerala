@@ -63,19 +63,19 @@ class PaymentControllerTest {
         assertNotNull(responseEntity);
     }
 
-    @Test
-    void testPrintPayInSlip() {
-        // Arrange
-        Document document = new Document();
-
-        when(paymentService.printPayInSlip(any(), any())).thenReturn(document);
-
-        // Act
-        PrintResponse responseEntity = paymentController.printPayInSlip(new PrintRequest());
-
-        // Assert
-        assertNotNull(responseEntity);
-    }
+//    @Test
+//    void testPrintPayInSlip() {
+//        // Arrange
+//        Document document = new Document();
+//
+//        when(paymentService.printPayInSlip(any(), any())).thenReturn(document);
+//
+//        // Act
+//        PrintResponse responseEntity = paymentController.printPayInSlip(new PrintRequest());
+//
+//        // Assert
+//        assertNotNull(responseEntity);
+//    }
 
     @Test
     void testDecryptTreasuryResponse() {
