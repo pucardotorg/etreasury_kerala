@@ -233,9 +233,14 @@ public class PaymentService {
 //        }
 //    }
 
-    public Document printPayInSlipPdf(TreasuryPaymentRequest request) {
-        ByteArrayResource byteArrayResource = pdfServiceUtil.generatePdfFromPdfService(request);
-        return fileStorageUtil.saveDocumentToFileStore(byteArrayResource.getByteArray());
+    public String printPayInSlipPdf(TreasuryPaymentRequest request) {
+        try {
+            ByteArrayResource byteArrayResource = pdfServiceUtil.generatePdfFromPdfService(request);
+            return fileStorageUtil.saveDocumentToFileStore(byteArrayResource.getByteArray()).getFileStore();
+        } catch (Exception e) {
+            log.error("Error occurred when creating pdf for payment", e);
+            return null;
+        }
     }
 
 //    public TransactionDetails fetchTransactionDetails(TransactionDetails transactionDetails, RequestInfo requestInfo) {
@@ -341,11 +346,12 @@ public class PaymentService {
                         .businessService(optionalAuthSek.get().getBusinessService())
                         .totalDue(optionalAuthSek.get().getTotalDue())
                         .mobileNumber(optionalAuthSek.get().getMobileNumber())
+                        .tenantId(config.getEgovStateTenantId())
                         .paidBy(optionalAuthSek.get().getPaidBy()).build();
                 TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
                         .requestInfo(requestInfo).treasuryPaymentData(data).build();
-                Document document = printPayInSlipPdf(request);
-                request.getTreasuryPaymentData().setFileStoreId(document.getFileStore());
+                String fileStore = printPayInSlipPdf(request);
+                request.getTreasuryPaymentData().setFileStoreId(fileStore);
 
                 producer.push("save-treasury-payment-data", request);
 //                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);

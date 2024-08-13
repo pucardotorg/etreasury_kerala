@@ -109,7 +109,8 @@ async function getRequestInfo() {
     const requestInfo = {
       apiId: "Rainmaker",
       authToken: accessToken,
-      userInfo: userInfo
+      userInfo: userInfo,
+      tenantId: "kl"
     };
 
     return requestInfo;
