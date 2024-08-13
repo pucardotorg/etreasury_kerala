@@ -83,6 +83,7 @@ public class FileStorageUtil {
             Document document = new Document();
             document.setFileStore(rootNode.get(FILES_KEY).get(0).get(FILE_STORE_ID_KEY).asText());
             document.setDocumentType(DOCUMENT_TYPE_PDF);
+            log.info("File Store Details: {}", document);
             return document;
         } else {
             throw new CustomException("INVALID_FILE_STORE_ID", "Failed to get valid file store id from file store service");

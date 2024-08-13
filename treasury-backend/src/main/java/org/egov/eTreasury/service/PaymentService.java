@@ -352,6 +352,7 @@ public class PaymentService {
                         .requestInfo(requestInfo).treasuryPaymentData(data).build();
                 String fileStore = printPayInSlipPdf(request);
                 request.getTreasuryPaymentData().setFileStoreId(fileStore);
+                log.info("saving Payment Data, {}", request.getTreasuryPaymentData());
 
                 producer.push("save-treasury-payment-data", request);
 //                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
