@@ -52,14 +52,14 @@ public class PaymentController {
 //        return HtmlResponse.builder().payload(verificationPage).responseInfo(responseInfo).build();
 //    }
 
-    @PostMapping("/v1/_printPayInSlip")
-    public PrintResponse printPayInSlip(@RequestBody PrintRequest request) {
-        log.info("Fetching pay-in slip for details: {}", request);
-        Document document = paymentService.printPayInSlip(request.getPrintDetails(), request.getRequestInfo());
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
-        log.info("Pay-in slip fetched successfully for details: {}", request);
-        return PrintResponse.builder().responseInfo(responseInfo).document(document).build();
-    }
+//    @PostMapping("/v1/_printPayInSlip")
+//    public PrintResponse printPayInSlip(@RequestBody PrintRequest request) {
+//        log.info("Fetching pay-in slip for details: {}", request);
+//        Document document = paymentService.printPayInSlip(request.getPrintDetails(), request.getRequestInfo());
+//        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+//        log.info("Pay-in slip fetched successfully for details: {}", request);
+//        return PrintResponse.builder().responseInfo(responseInfo).document(document).build();
+//    }
 
 //    @PostMapping("/v1/_transactionDetails")
 //    public TransactionResponse processTransaction(@RequestBody TransactionRequest request) {

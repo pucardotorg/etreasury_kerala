@@ -83,4 +83,13 @@ public class PaymentConfiguration {
 
     @Value("${egov.idgen.name}")
     private String idName;
+
+    @Value("${egov.pdf.service.host}")
+    private String pdfServiceHost;
+
+    @Value("${egov.pdf.service.create.endpoint}")
+    private String pdfServiceEndpoint;
+
+    @Value("${egov.pdf.template.key}")
+    private String pdfTemplateKey;
 }
