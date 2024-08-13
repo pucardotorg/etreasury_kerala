@@ -108,6 +108,7 @@ async function getRequestInfo() {
 
     const requestInfo = {
       apiId: "Rainmaker",
+      msgId: "1723548200333|en_IN",
       authToken: accessToken,
       userInfo: userInfo,
       tenantId: "kl"
