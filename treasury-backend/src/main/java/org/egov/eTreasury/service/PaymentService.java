@@ -161,6 +161,156 @@ public class PaymentService {
         }
     }
 
+    public String printPayInSlipPdf(TreasuryPaymentRequest request) {
+        try {
+            ByteArrayResource byteArrayResource = pdfServiceUtil.generatePdfFromPdfService(request);
+            return fileStorageUtil.saveDocumentToFileStore(byteArrayResource.getByteArray()).getFileStore();
+        } catch (Exception e) {
+            log.error("Error occurred when creating pdf for payment", e);
+            return null;
+        }
+    }
+
+    public void decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
+        log.info("Decrypting Treasury Payload for authToken: {}", treasuryParams.getAuthToken());
+        try {
+            Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
+            if (optionalAuthSek.isPresent()) {
+                String decryptedSek = optionalAuthSek.get().getDecryptedSek();
+                String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
+                String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
+                log.info("Decrypted data: {}", decryptedData);
+                TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
+                TreasuryPaymentData data = TreasuryPaymentData.builder()
+                        .grn(transactionDetails.getGrn())
+                        .challanTimestamp(transactionDetails.getChallanTimestamp())
+                        .bankRefNo(transactionDetails.getBankRefNo())
+                        .bankTimestamp(transactionDetails.getBankTimestamp())
+                        .bankCode(transactionDetails.getBankCode())
+                        .status(transactionDetails.getStatus().charAt(0))
+                        .cin(transactionDetails.getCin())
+                        .amount(new BigDecimal(transactionDetails.getAmount()))
+                        .partyName(transactionDetails.getPartyName())
+                        .departmentId(transactionDetails.getDepartmentId())
+                        .remarkStatus(transactionDetails.getRemarkStatus())
+                        .remarks(transactionDetails.getRemarks())
+                        .billId(optionalAuthSek.get().getBillId())
+                        .businessService(optionalAuthSek.get().getBusinessService())
+                        .totalDue(optionalAuthSek.get().getTotalDue())
+                        .mobileNumber(optionalAuthSek.get().getMobileNumber())
+                        .tenantId(config.getEgovStateTenantId())
+                        .paidBy(optionalAuthSek.get().getPaidBy()).build();
+                requestInfo.getUserInfo().setTenantId(config.getEgovStateTenantId());
+                log.info("request info, {}", requestInfo);
+                TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
+                        .requestInfo(requestInfo).treasuryPaymentData(data).build();
+                String fileStore = printPayInSlipPdf(request);
+                request.getTreasuryPaymentData().setFileStoreId(fileStore);
+                log.info("saving Payment Data, {}", request.getTreasuryPaymentData());
+
+                producer.push("save-treasury-payment-data", request);
+//                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
+            }
+        } catch (Exception e) {
+            log.error("Decrypt Treasury Response failed: ", e);
+            throw new CustomException("TREASURY_RESPONSE_ERROR", "Error occurred during decrypting Treasury Response");
+        }
+    }
+
+    private void saveAuthTokenAndSek(RequestInfo requestInfo, AuthSek authSek) {
+        AuthSekRequest request = new AuthSekRequest(requestInfo, authSek);
+        producer.push("save-auth-sek", request);
+    }
+
+
+    private String generatePostBody(String decryptedSek, String jsonData) {
+        try {
+            // Convert SEK to AES key
+            SecretKey aesKey = new SecretKeySpec(decryptedSek.getBytes(StandardCharsets.UTF_8), "AES");
+
+            // Initialize AES cipher in encryption mode
+            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
+
+            // Encrypt JSON data
+            byte[] encryptedDataBytes = aesCipher.doFinal(jsonData.getBytes(StandardCharsets.UTF_8));
+            String encryptedData = Base64.getEncoder().encodeToString(encryptedDataBytes);
+
+            // Generate HMAC using JSON data and SEK
+            String hmac = encryptionUtil.generateHMAC(jsonData, decryptedSek);
+
+            // Create PostBody object and convert to JSON string
+            PostBody postBody = new PostBody(hmac, encryptedData);
+            return objectMapper.writeValueAsString(postBody);
+        } catch (Exception e) {
+            log.error("Error during post body generation: ", e);
+            throw new CustomException("POST_BODY_GENERATION_ERROR", "Error occurred generating post body");
+        }
+    }
+
+    private Long convertTimestampToMillis(String timestampStr) {
+        List<DateTimeFormatter> formatters = new ArrayList<>();
+        formatters.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"));
+        formatters.add(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH.mm.ss.SSSSS"));
+        LocalDateTime dateTime = null;
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                dateTime = LocalDateTime.parse(timestampStr, formatter);
+                break;
+            } catch (Exception e) {
+                // Try next formatter if parsing fails
+            }
+        }
+        if (dateTime != null) {
+            return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+        } else {
+            return null;
+        }
+    }
+    public Document getTreasuryPaymentData(String billId) {
+        Optional<TreasuryPaymentData> optionalPaymentData = treasuryPaymentRepository.getTreasuryPaymentData(billId)
+                .stream().findFirst();
+        if (optionalPaymentData.isPresent()) {
+            return  Document.builder().fileStore(optionalPaymentData.get().getFileStoreId()).documentType("application/pdf").build();
+        } else {
+            log.error("No Payment data for given bill Id");
+            throw new CustomException("PAYMENT_RECEIPT_INVALID_BILL_ID", "Given Bill Id Has no Payment Data");
+        }
+    }
+
+    public void callCollectionServiceAndUpdatePayment(TreasuryPaymentRequest request) {
+
+        PaymentDetail paymentDetail = PaymentDetail.builder()
+                .billId(request.getTreasuryPaymentData().getBillId())
+                .totalDue(BigDecimal.valueOf(request.getTreasuryPaymentData().getTotalDue()))
+                .totalAmountPaid(new BigDecimal(String.valueOf(request.getTreasuryPaymentData().getAmount())))
+                .businessService(request.getTreasuryPaymentData().getBusinessService()).build();
+        Payment payment = Payment.builder()
+                .tenantId(config.getEgovStateTenantId())
+                .paymentDetails(Collections.singletonList(paymentDetail))
+                .payerName(request.getTreasuryPaymentData().getPartyName())
+                .paidBy(request.getTreasuryPaymentData().getPaidBy())
+                .mobileNumber(request.getTreasuryPaymentData().getMobileNumber())
+                .transactionNumber(request.getTreasuryPaymentData().getGrn())
+                .transactionDate(convertTimestampToMillis(request.getTreasuryPaymentData().getChallanTimestamp()))
+                .instrumentNumber(request.getTreasuryPaymentData().getBankRefNo())
+                .instrumentDate(convertTimestampToMillis(request.getTreasuryPaymentData().getBankTimestamp()))
+                .totalAmountPaid(new BigDecimal(String.valueOf(request.getTreasuryPaymentData().getAmount())))
+                .paymentMode("ONLINE")
+                .fileStoreId(request.getTreasuryPaymentData().getFileStoreId())
+                .build();
+        String paymentStatus = String.valueOf(request.getTreasuryPaymentData().getStatus());
+        if (paymentStatus.equals("Y")) {
+            payment.setPaymentStatus("DEPOSITED");
+        }
+        PaymentRequest paymentRequest = new PaymentRequest(request.getRequestInfo(), payment);
+        collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
+    }
+
+//    private <T> ResponseEntity<T> callService(String headersData, String postBody, String url, Class<T> responseType, MediaType mediaType) {
+//        return treasuryUtil.callService(headersData, postBody, url, responseType, mediaType);
+//    }
+
 //    public Payload doubleVerifyPayment(VerificationData verificationData, RequestInfo requestInfo) {
 //        try {
 //            VerificationDetails verificationDetails = verificationData.getVerificationDetails();
@@ -233,15 +383,6 @@ public class PaymentService {
 //        }
 //    }
 
-    public String printPayInSlipPdf(TreasuryPaymentRequest request) {
-        try {
-            ByteArrayResource byteArrayResource = pdfServiceUtil.generatePdfFromPdfService(request);
-            return fileStorageUtil.saveDocumentToFileStore(byteArrayResource.getByteArray()).getFileStore();
-        } catch (Exception e) {
-            log.error("Error occurred when creating pdf for payment", e);
-            return null;
-        }
-    }
 
 //    public TransactionDetails fetchTransactionDetails(TransactionDetails transactionDetails, RequestInfo requestInfo) {
 //        try {
@@ -319,85 +460,6 @@ public class PaymentService {
 //        }
 //    }
 
-    public void decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
-        log.info("Decrypting Treasury Payload for authToken: {}", treasuryParams.getAuthToken());
-        try {
-            Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
-            if (optionalAuthSek.isPresent()) {
-                String decryptedSek = optionalAuthSek.get().getDecryptedSek();
-                String decryptedRek = encryptionUtil.decryptResponse(treasuryParams.getRek(), decryptedSek);
-                String decryptedData = encryptionUtil.decryptResponse(treasuryParams.getData(), decryptedRek);
-                log.info("Decrypted data: {}", decryptedData);
-                TransactionDetails transactionDetails = objectMapper.readValue(decryptedData, TransactionDetails.class);
-                TreasuryPaymentData data = TreasuryPaymentData.builder()
-                        .grn(transactionDetails.getGrn())
-                        .challanTimestamp(transactionDetails.getChallanTimestamp())
-                        .bankRefNo(transactionDetails.getBankRefNo())
-                        .bankTimestamp(transactionDetails.getBankTimestamp())
-                        .bankCode(transactionDetails.getBankCode())
-                        .status(transactionDetails.getStatus().charAt(0))
-                        .cin(transactionDetails.getCin())
-                        .amount(new BigDecimal(transactionDetails.getAmount()))
-                        .partyName(transactionDetails.getPartyName())
-                        .departmentId(transactionDetails.getDepartmentId())
-                        .remarkStatus(transactionDetails.getRemarkStatus())
-                        .remarks(transactionDetails.getRemarks())
-                        .billId(optionalAuthSek.get().getBillId())
-                        .businessService(optionalAuthSek.get().getBusinessService())
-                        .totalDue(optionalAuthSek.get().getTotalDue())
-                        .mobileNumber(optionalAuthSek.get().getMobileNumber())
-                        .tenantId(config.getEgovStateTenantId())
-                        .paidBy(optionalAuthSek.get().getPaidBy()).build();
-                requestInfo.getUserInfo().setTenantId(config.getEgovStateTenantId());
-                log.info("request info, {}", requestInfo);
-                TreasuryPaymentRequest request = TreasuryPaymentRequest.builder()
-                        .requestInfo(requestInfo).treasuryPaymentData(data).build();
-                String fileStore = printPayInSlipPdf(request);
-                request.getTreasuryPaymentData().setFileStoreId(fileStore);
-                log.info("saving Payment Data, {}", request.getTreasuryPaymentData());
-
-                producer.push("save-treasury-payment-data", request);
-//                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
-            }
-        } catch (Exception e) {
-            log.error("Decrypt Treasury Response failed: ", e);
-            throw new CustomException("TREASURY_RESPONSE_ERROR", "Error occurred during decrypting Treasury Response");
-        }
-    }
-
-    private void saveAuthTokenAndSek(RequestInfo requestInfo, AuthSek authSek) {
-        AuthSekRequest request = new AuthSekRequest(requestInfo, authSek);
-        producer.push("save-auth-sek", request);
-    }
-
-    private <T> ResponseEntity<T> callService(String headersData, String postBody, String url, Class<T> responseType, MediaType mediaType) {
-        return treasuryUtil.callService(headersData, postBody, url, responseType, mediaType);
-    }
-
-    private String generatePostBody(String decryptedSek, String jsonData) {
-        try {
-            // Convert SEK to AES key
-            SecretKey aesKey = new SecretKeySpec(decryptedSek.getBytes(StandardCharsets.UTF_8), "AES");
-
-            // Initialize AES cipher in encryption mode
-            Cipher aesCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            aesCipher.init(Cipher.ENCRYPT_MODE, aesKey);
-
-            // Encrypt JSON data
-            byte[] encryptedDataBytes = aesCipher.doFinal(jsonData.getBytes(StandardCharsets.UTF_8));
-            String encryptedData = Base64.getEncoder().encodeToString(encryptedDataBytes);
-
-            // Generate HMAC using JSON data and SEK
-            String hmac = encryptionUtil.generateHMAC(jsonData, decryptedSek);
-
-            // Create PostBody object and convert to JSON string
-            PostBody postBody = new PostBody(hmac, encryptedData);
-            return objectMapper.writeValueAsString(postBody);
-        } catch (Exception e) {
-            log.error("Error during post body generation: ", e);
-            throw new CustomException("POST_BODY_GENERATION_ERROR", "Error occurred generating post body");
-        }
-    }
 
 //    private String generatePostBodyForRefund(String decryptedSek, String jsonData) {
 //        try {
@@ -454,62 +516,4 @@ public class PaymentService {
 //        log.info("Payment request sent to collections service: {}", paymentRequest);
 //    }
 
-    private Long convertTimestampToMillis(String timestampStr) {
-        List<DateTimeFormatter> formatters = new ArrayList<>();
-        formatters.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"));
-        formatters.add(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH.mm.ss.SSSSS"));
-        LocalDateTime dateTime = null;
-        for (DateTimeFormatter formatter : formatters) {
-            try {
-                dateTime = LocalDateTime.parse(timestampStr, formatter);
-                break;
-            } catch (Exception e) {
-                // Try next formatter if parsing fails
-            }
-        }
-        if (dateTime != null) {
-            return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-        } else {
-            return null;
-        }
-    }
-    public Document getTreasuryPaymentData(String billId) {
-        Optional<TreasuryPaymentData> optionalPaymentData = treasuryPaymentRepository.getTreasuryPaymentData(billId)
-                .stream().findFirst();
-        if (optionalPaymentData.isPresent()) {
-            return  Document.builder().fileStore(optionalPaymentData.get().getFileStoreId()).documentType("application/pdf").build();
-        } else {
-            log.error("No Payment data for given bill Id");
-            throw new CustomException("PAYMENT_RECEIPT_INVALID_BILL_ID", "Given Bill Id Has no Payment Data");
-        }
-    }
-
-    public void callCollectionServiceAndUpdatePayment(TreasuryPaymentRequest request) {
-
-        PaymentDetail paymentDetail = PaymentDetail.builder()
-                .billId(request.getTreasuryPaymentData().getBillId())
-                .totalDue(BigDecimal.valueOf(request.getTreasuryPaymentData().getTotalDue()))
-                .totalAmountPaid(new BigDecimal(String.valueOf(request.getTreasuryPaymentData().getAmount())))
-                .businessService(request.getTreasuryPaymentData().getBusinessService()).build();
-        Payment payment = Payment.builder()
-                .tenantId(config.getEgovStateTenantId())
-                .paymentDetails(Collections.singletonList(paymentDetail))
-                .payerName(request.getTreasuryPaymentData().getPartyName())
-                .paidBy(request.getTreasuryPaymentData().getPaidBy())
-                .mobileNumber(request.getTreasuryPaymentData().getMobileNumber())
-                .transactionNumber(request.getTreasuryPaymentData().getGrn())
-                .transactionDate(convertTimestampToMillis(request.getTreasuryPaymentData().getChallanTimestamp()))
-                .instrumentNumber(request.getTreasuryPaymentData().getBankRefNo())
-                .instrumentDate(convertTimestampToMillis(request.getTreasuryPaymentData().getBankTimestamp()))
-                .totalAmountPaid(new BigDecimal(String.valueOf(request.getTreasuryPaymentData().getAmount())))
-                .paymentMode("ONLINE")
-                .fileStoreId(request.getTreasuryPaymentData().getFileStoreId())
-                .build();
-        String paymentStatus = String.valueOf(request.getTreasuryPaymentData().getStatus());
-        if (paymentStatus.equals("Y")) {
-            payment.setPaymentStatus("DEPOSITED");
-        }
-        PaymentRequest paymentRequest = new PaymentRequest(request.getRequestInfo(), payment);
-        collectionsUtil.callService(paymentRequest, config.getCollectionServiceHost(), config.getCollectionsPaymentCreatePath());
-    }
 }

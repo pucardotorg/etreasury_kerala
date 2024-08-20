@@ -43,6 +43,24 @@ public class PaymentController {
         return HtmlResponse.builder().payload(paymentPage).responseInfo(responseInfo).build();
     }
 
+    @PostMapping("/v1/_decryptTreasuryResponse")
+    public ResponseEntity<ResponseInfo> decryptTreasuryResponse(@RequestBody TreasuryRequest request) {
+        log.info("Decrypting Treasury Response for request: {}", request);
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        paymentService.decryptAndProcessTreasuryPayload(request.getTreasuryParams(), request.getRequestInfo());
+        log.info("Decrypted Treasury Response successfully for request: {}", request);
+        return ResponseEntity.ok().body(responseInfo);
+    }
+
+    @PostMapping("/v1/_getPaymentReceipt")
+    public PrintResponse getTreasuryPaymentReceipt(@RequestParam String billId, @RequestBody RequestInfo requestInfo) {
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
+        Document document = paymentService.getTreasuryPaymentData(billId);
+        return PrintResponse.builder()
+                .responseInfo(responseInfo)
+                .document(document).build();
+    }
+
 //    @PostMapping("/v1/_doubleVerification")
 //    public HtmlResponse verifyDetails(@RequestBody VerificationRequest request) {
 //        log.info("Performing double verification for request: {}", request);
@@ -88,21 +106,5 @@ public class PaymentController {
 //        return RefundResponse.builder().responseInfo(responseInfo).refundData(refundData).build();
 //    }
 
-    @PostMapping("/v1/_decryptTreasuryResponse")
-    public ResponseEntity<ResponseInfo> decryptTreasuryResponse(@RequestBody TreasuryRequest request) {
-        log.info("Decrypting Treasury Response for request: {}", request);
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
-        paymentService.decryptAndProcessTreasuryPayload(request.getTreasuryParams(), request.getRequestInfo());
-        log.info("Decrypted Treasury Response successfully for request: {}", request);
-        return ResponseEntity.ok().body(responseInfo);
-    }
 
-    @PostMapping("/v1/_getPaymentReceipt")
-    public PrintResponse getTreasuryPaymentReceipt(@RequestParam String billId, @RequestBody RequestInfo requestInfo) {
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
-        Document document = paymentService.getTreasuryPaymentData(billId);
-        return PrintResponse.builder()
-                .responseInfo(responseInfo)
-                .document(document).build();
-    }
 }
