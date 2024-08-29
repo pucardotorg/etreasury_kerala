@@ -1,10 +1,14 @@
 package org.egov.eTreasury.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.models.Document;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.User;
 import org.egov.eTreasury.config.PaymentConfiguration;
 import org.egov.eTreasury.kafka.Producer;
 import org.egov.eTreasury.model.*;
+import org.egov.eTreasury.repository.AuthSekRepository;
 import org.egov.eTreasury.repository.TreasuryPaymentRepository;
 import org.egov.eTreasury.util.*;
 import org.egov.tracer.model.CustomException;
@@ -16,9 +20,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,6 +50,14 @@ class PaymentServiceTest {
     private CollectionsUtil collectionsUtil;
     @Mock
     private TreasuryPaymentRepository treasuryPaymentRepository;
+    @Mock
+    private AuthSekRepository authSekRepository;
+    @Mock
+    private EncryptionUtil encryptionUtil;
+    @Mock
+    private ObjectMapper objectMapper;
+    @Mock
+    private TransactionDetails transactionDetails;
 
     @Test
     void verifyConnection_success() {
@@ -127,5 +146,38 @@ class PaymentServiceTest {
         privateMethod.invoke(paymentService, mockRequestInfo, mockAuthSek);
 
         verify(producer).push(eq("save-auth-sek"), any(AuthSekRequest.class));
+    }
+
+    @Test
+    void testDecryptAndProcessTreasuryPayLoad() throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, JsonProcessingException {
+        TreasuryParams treasuryParams = mock(TreasuryParams.class);
+        RequestInfo requestInfo = mock(RequestInfo.class);
+        ArrayList<AuthSek> list = new ArrayList<>();
+        list.add(mock(AuthSek.class));
+        when(authSekRepository.getAuthSek(treasuryParams.getAuthToken())).thenReturn(list);
+        Optional<AuthSek> optionalAuthSek = Optional.ofNullable(list.get(0));
+        when(optionalAuthSek.get().getDecryptedSek()).thenReturn("testSek");
+        when(treasuryParams.getRek()).thenReturn("testRek");
+        when(treasuryParams.getData()).thenReturn("testData").toString();
+        when(encryptionUtil.decryptResponse("testRek","testSek")).thenReturn("testRek");
+        when(encryptionUtil.decryptResponse("testData", "testRek")).thenReturn("testData");
+        when(objectMapper.readValue("testData", TransactionDetails.class)).thenReturn(transactionDetails);
+        when(transactionDetails.getAmount()).thenReturn("10");
+        when(transactionDetails.getStatus()).thenReturn("success");
+        when(requestInfo.getUserInfo()).thenReturn(mock(User.class));
+
+        TreasuryPaymentData treasuryPaymentData = paymentService.decryptAndProcessTreasuryPayload(treasuryParams,requestInfo);
+
+        assertNotNull(treasuryPaymentData);
+        assertEquals(treasuryPaymentData.getAmount(), BigDecimal.valueOf(10));
+    }
+
+    @Test
+    void testDecryptAndProcessTreasuryPayLoadListNull() {
+        TreasuryParams treasuryParams = mock(TreasuryParams.class);
+        RequestInfo requestInfo = mock(RequestInfo.class);
+        ArrayList<AuthSek> list = new ArrayList<>();
+        when(authSekRepository.getAuthSek(treasuryParams.getAuthToken())).thenReturn(list);
+        paymentService.decryptAndProcessTreasuryPayload(treasuryParams,requestInfo);
     }
 }
