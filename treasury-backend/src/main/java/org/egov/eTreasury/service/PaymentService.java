@@ -319,7 +319,7 @@ public class PaymentService {
 //        }
 //    }
 
-    public void decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
+    public TreasuryPaymentData decryptAndProcessTreasuryPayload(TreasuryParams treasuryParams, RequestInfo requestInfo) {
         log.info("Decrypting Treasury Payload for authToken: {}", treasuryParams.getAuthToken());
         try {
             Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
@@ -358,11 +358,13 @@ public class PaymentService {
 
                 producer.push("save-treasury-payment-data", request);
 //                updatePaymentStatus(optionalAuthSek.get(), transactionDetails, requestInfo, fileStoreId);
+                return data;
             }
         } catch (Exception e) {
             log.error("Decrypt Treasury Response failed: ", e);
             throw new CustomException("TREASURY_RESPONSE_ERROR", "Error occurred during decrypting Treasury Response");
         }
+        return null;
     }
 
     private void saveAuthTokenAndSek(RequestInfo requestInfo, AuthSek authSek) {

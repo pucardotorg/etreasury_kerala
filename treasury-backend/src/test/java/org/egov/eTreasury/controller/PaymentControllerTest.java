@@ -79,7 +79,7 @@ class PaymentControllerTest {
 
     @Test
     void testDecryptTreasuryResponse() {
-        ResponseEntity<ResponseInfo> responseEntity = paymentController.decryptTreasuryResponse(new TreasuryRequest());
+        ResponseEntity<TreasuryPaymentResponse> responseEntity = paymentController.decryptTreasuryResponse(new TreasuryRequest());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
