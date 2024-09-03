@@ -45,5 +45,29 @@ public class PaymentEnrichment {
     }
 
     public void enrichTransactionResponse(TransactionDetails transactionDetails, BrowserDetails browserDetails) {
+
+            transactionDetails.setSbiEpayRefId(browserDetails.getSbiEpayRefId());
+            transactionDetails.setTransactionStatus(browserDetails.getTransactionStatus());
+            transactionDetails.setPostingAmount(browserDetails.getAmount());
+            transactionDetails.setMerchantCurrency(browserDetails.getCurrency());
+            transactionDetails.setPayMode(browserDetails.getPayMode());
+            transactionDetails.setOtherDetails(browserDetails.getOtherDetails());
+            transactionDetails.setReason(browserDetails.getReason());
+            transactionDetails.setBankCode(browserDetails.getBankCode());
+            transactionDetails.setBankReferenceNumber(browserDetails.getBankReferenceNumber());
+            transactionDetails.setTransactionDate(browserDetails.getTransactionDate());
+            transactionDetails.setMerchantCountry(browserDetails.getCountry());
+            transactionDetails.setCin(browserDetails.getCin());
+            transactionDetails.setMerchantId(browserDetails.getMerchantId());
+            transactionDetails.setTotalFeeGst(browserDetails.getTotalFeeGst());
+            transactionDetails.setRef1(browserDetails.getRef1());
+            transactionDetails.setRef2(browserDetails.getRef2());
+            transactionDetails.setRef3(browserDetails.getRef3());
+            transactionDetails.setRef4(browserDetails.getRef4());
+            transactionDetails.setRef5(browserDetails.getRef5());
+            transactionDetails.setRef6(browserDetails.getRef6());
+            transactionDetails.setRef7(browserDetails.getRef7());
+            transactionDetails.setRef8(browserDetails.getRef8());
+            transactionDetails.setRef9(browserDetails.getRef9());
     }
 }
