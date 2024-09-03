@@ -30,8 +30,6 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .merchantCurrency(rs.getString("merchant_currency"))
                 .postingAmount(rs.getDouble("posting_amount"))
                 .otherDetails(rs.getString("other_details"))
-                .successUrl(rs.getString("success_url"))
-                .failUrl(rs.getString("fail_url"))
                 .aggregatorId(rs.getString("aggregator_id"))
                 .merchantOrderNumber(rs.getString("merchant_order_number"))
                 .merchantCustomerId(rs.getString("merchant_customer_id"))
