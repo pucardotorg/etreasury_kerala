@@ -1,5 +1,5 @@
 CREATE TABLE transaction_details (
-    merchant_id VARCHAR(30) PRIMARY KEY,
+    merchant_id VARCHAR(30),
     operating_mode VARCHAR(30),
     merchant_country VARCHAR(30),
     merchant_currency VARCHAR(30),
@@ -8,7 +8,7 @@ CREATE TABLE transaction_details (
     success_url VARCHAR(255),
     fail_url VARCHAR(255),
     aggregator_id VARCHAR(30),
-    merchant_order_number VARCHAR(30),
+    merchant_order_number VARCHAR(30) PRIMARY KEY,
     merchant_customer_id VARCHAR(30),
     pay_mode VARCHAR(30),
     access_medium VARCHAR(30),
