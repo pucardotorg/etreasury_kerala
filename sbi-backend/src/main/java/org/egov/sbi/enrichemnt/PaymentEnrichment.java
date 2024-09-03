@@ -48,7 +48,9 @@ public class PaymentEnrichment {
     public void enrichTransactionResponse(TransactionDetails transactionDetails, BrowserDetails browserDetails, RequestInfo requestInfo) {
 
 
-        AuditDetails auditDetails = createAuditDetails(requestInfo);
+        Long currentTime = System.currentTimeMillis();
+        transactionDetails.getAuditDetails().setLastModifiedTime(currentTime);
+        transactionDetails.getAuditDetails().setLastModifiedBy(requestInfo.getUserInfo().getUuid());
 
             transactionDetails.setSbiEpayRefId(browserDetails.getSbiEpayRefId());
             transactionDetails.setTransactionStatus(browserDetails.getTransactionStatus());
@@ -73,7 +75,7 @@ public class PaymentEnrichment {
             transactionDetails.setRef7(browserDetails.getRef7());
             transactionDetails.setRef8(browserDetails.getRef8());
             transactionDetails.setRef9(browserDetails.getRef9());
-            transactionDetails.setAuditDetails(auditDetails);
+            transactionDetails.setRowNumber(transactionDetails.getRowNumber() + 1);
     }
 
     private AuditDetails createAuditDetails(RequestInfo requestInfo) {

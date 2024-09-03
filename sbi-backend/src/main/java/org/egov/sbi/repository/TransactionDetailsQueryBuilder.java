@@ -10,7 +10,7 @@ import java.util.List;
 public class TransactionDetailsQueryBuilder {
 
 
-    private static final String BASE_APPLICATION_QUERY = "SELECT merchant_id, operating_mode, merchant_country, merchant_currency, posting_amount, other_details, success_url, fail_url, aggregator_id, merchant_order_number, merchant_customer_id, pay_mode, access_medium, transaction_source, createdBy, lastModifiedBy, createdTime, lastModifiedTime, transaction_status, sbi_epay_ref_id, reason, bank_code, bank_reference_number, transaction_date, cin, total_fee_gst, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9 ";
+    private static final String BASE_APPLICATION_QUERY = "SELECT merchant_id, operating_mode, merchant_country, merchant_currency, posting_amount, other_details, success_url, fail_url, aggregator_id, merchant_order_number, merchant_customer_id, pay_mode, access_medium, transaction_source, created_by, last_modified_by, created_time, last_modified_time, transaction_status, sbi_epay_ref_id, reason, bank_code, bank_reference_number, transaction_date, cin, total_fee_gst, row_number, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9 ";
 
 
     private static final String FROM_TABLES = " FROM transaction_details ";

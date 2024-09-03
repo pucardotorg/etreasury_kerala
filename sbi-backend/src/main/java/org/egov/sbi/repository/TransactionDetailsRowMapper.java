@@ -17,10 +17,10 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
     public TransactionDetails mapRow(ResultSet rs, int rowNum) throws SQLException {
 
         AuditDetails auditdetails = AuditDetails.builder()
-                .createdBy(rs.getString("createdby"))
-                .createdTime(rs.getLong("createdtime"))
-                .lastModifiedBy(rs.getString("lastmodifiedby"))
-                .lastModifiedTime(rs.getLong("lastModifiedTime"))
+                .createdBy(rs.getString("created_by"))
+                .createdTime(rs.getLong("created_time"))
+                .lastModifiedBy(rs.getString("last_modified_by"))
+                .lastModifiedTime(rs.getLong("last_modified_time"))
                 .build();
 
         return TransactionDetails.builder()
@@ -47,7 +47,7 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .transactionDate(rs.getString("transaction_date"))
                 .cin(rs.getString("cin"))
                 .totalFeeGst(rs.getDouble("total_fee_gst"))
-                .rowVersion(rs.getInt("row_version"))
+                .rowNumber(rs.getInt("row_number"))
                 .ref1(rs.getString("ref1"))
                 .ref2(rs.getString("ref2"))
                 .ref3(rs.getString("ref3"))
