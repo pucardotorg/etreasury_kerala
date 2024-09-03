@@ -58,6 +58,57 @@ public class TransactionDetails {
     @JsonProperty("AuditDetails")
     private AuditDetails auditDetails;
 
+    @JsonProperty("SBIePayRefId")
+    private String sbiEpayRefId;
+
+    @JsonProperty("TransactionStatus")
+    private String transactionStatus;
+
+    @JsonProperty("Reason")
+    private String reason;
+
+    @JsonProperty("BankCode")
+    private String bankCode;
+
+    @JsonProperty("BankReferenceNumber")
+    private String bankReferenceNumber;
+
+    @JsonProperty("TransactionDate")
+    private String transactionDate;
+
+    @JsonProperty("CIN")
+    private String cin;
+
+    @JsonProperty("TotalFeeGST")
+    private double totalFeeGst;
+
+    @JsonProperty("Ref1")
+    private String ref1;
+
+    @JsonProperty("Ref2")
+    private String ref2;
+
+    @JsonProperty("Ref3")
+    private String ref3;
+
+    @JsonProperty("Ref4")
+    private String ref4;
+
+    @JsonProperty("Ref5")
+    private String ref5;
+
+    @JsonProperty("Ref6")
+    private String ref6;
+
+    @JsonProperty("Ref7")
+    private String ref7;
+
+    @JsonProperty("Ref8")
+    private String ref8;
+
+    @JsonProperty("Ref9")
+    private String ref9;
+
     @Override
     public String toString() {
         return merchantId + "|" +

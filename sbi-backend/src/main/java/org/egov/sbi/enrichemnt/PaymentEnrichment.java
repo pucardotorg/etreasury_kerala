@@ -3,6 +3,8 @@ package org.egov.sbi.enrichemnt;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.models.AuditDetails;
 import org.egov.sbi.config.PaymentConfiguration;
+import org.egov.sbi.model.BrowserDetails;
+import org.egov.sbi.model.TransactionDetails;
 import org.egov.sbi.model.TransactionRequest;
 import org.egov.sbi.util.IdgenUtil;
 import org.egov.tracer.model.CustomException;
@@ -40,5 +42,8 @@ public class PaymentEnrichment {
             log.error("Error enriching transaction request :: {}", e.toString());
             throw new CustomException(ENRICHMENT_EXCEPTION, e.getMessage());
         }
+    }
+
+    public void enrichTransactionResponse(TransactionDetails transactionDetails, BrowserDetails browserDetails) {
     }
 }
