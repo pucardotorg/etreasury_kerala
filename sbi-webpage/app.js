@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const port = 8080;
-const backendUrl = process.env.EXTERNAL_HOST || "http://localhost:8088/sbi-backend//v1/_decryptBrowserResponse";
+const backendUrl = process.env.EXTERNAL_HOST || "http://localhost:8088/sbi-backend/v1/_decryptBrowserResponse";
 const pushResponseContextPath = "/sbi-payments";
 const successUrlContextPath = "/sbi-payment/success.jsp";
 const failUrlContextPath = "/sbi-payment/fail.jsp";
