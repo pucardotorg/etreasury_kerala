@@ -2,6 +2,7 @@ package org.egov.sbi.enrichemnt;
 
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.models.AuditDetails;
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.sbi.config.PaymentConfiguration;
 import org.egov.sbi.model.BrowserDetails;
 import org.egov.sbi.model.TransactionDetails;
@@ -29,7 +30,7 @@ public class PaymentEnrichment {
         try {
             String merchantOrderNumber = idgenUtil.getIdList(request.getRequestInfo(), config.getEgovStateTenantId(), config.getIdName(), null, 1).get(0);
             request.getTransactionDetails().setMerchantOrderNumber(merchantOrderNumber);
-            AuditDetails auditDetails = AuditDetails.builder().createdBy(request.getRequestInfo().getUserInfo().getUuid()).createdTime(System.currentTimeMillis()).lastModifiedBy(request.getRequestInfo().getUserInfo().getUuid()).lastModifiedTime(System.currentTimeMillis()).build();
+            AuditDetails auditDetails = createAuditDetails(request.getRequestInfo());
             request.getTransactionDetails().setAuditDetails(auditDetails);
             request.getTransactionDetails().setSuccessUrl(config.getSbiTransactionSuccessUrl());
             request.getTransactionDetails().setFailUrl(config.getSbiTransactionFailUrl());
@@ -44,7 +45,10 @@ public class PaymentEnrichment {
         }
     }
 
-    public void enrichTransactionResponse(TransactionDetails transactionDetails, BrowserDetails browserDetails) {
+    public void enrichTransactionResponse(TransactionDetails transactionDetails, BrowserDetails browserDetails, RequestInfo requestInfo) {
+
+
+        AuditDetails auditDetails = createAuditDetails(requestInfo);
 
             transactionDetails.setSbiEpayRefId(browserDetails.getSbiEpayRefId());
             transactionDetails.setTransactionStatus(browserDetails.getTransactionStatus());
@@ -69,5 +73,17 @@ public class PaymentEnrichment {
             transactionDetails.setRef7(browserDetails.getRef7());
             transactionDetails.setRef8(browserDetails.getRef8());
             transactionDetails.setRef9(browserDetails.getRef9());
+            transactionDetails.setAuditDetails(auditDetails);
+    }
+
+    private AuditDetails createAuditDetails(RequestInfo requestInfo) {
+        long currentTime = System.currentTimeMillis();
+        String userId = requestInfo.getUserInfo().getUuid();
+        return AuditDetails.builder()
+                .createdBy(userId)
+                .createdTime(currentTime)
+                .lastModifiedBy(userId)
+                .lastModifiedTime(currentTime)
+                .build();
     }
 }
