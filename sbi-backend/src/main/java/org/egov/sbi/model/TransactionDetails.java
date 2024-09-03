@@ -82,6 +82,9 @@ public class TransactionDetails {
     @JsonProperty("TotalFeeGST")
     private double totalFeeGst;
 
+    @JsonProperty("rowNumber")
+    private Integer rowNumber;
+
     @JsonProperty("Ref1")
     private String ref1;
 

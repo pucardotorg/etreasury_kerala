@@ -65,7 +65,7 @@ public class PaymentService {
         TransactionDetails transactionDetails = repository.getTransactionDetails(browserDetails.getMerchantOrderNumber())
                 .stream().findFirst().get();
 
-        paymentEnrichment.enrichTransactionResponse(transactionDetails, browserDetails);
+        paymentEnrichment.enrichTransactionResponse(transactionDetails, browserDetails, request.getRequestInfo());
 
         TransactionRequest transactionRequest =  TransactionRequest.builder()
                 .requestInfo(request.getRequestInfo()).transactionDetails(transactionDetails).build();
@@ -73,4 +73,5 @@ public class PaymentService {
 
         return transactionDetails;
     }
+
 }
