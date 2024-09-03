@@ -1,0 +1,20 @@
+CREATE TABLE transaction_details (
+    merchant_id VARCHAR(30),
+    operating_mode VARCHAR(30),
+    merchant_country VARCHAR(30),
+    merchant_currency VARCHAR(30),
+    posting_amount DOUBLE PRECISION,
+    other_details VARCHAR(255),
+    success_url VARCHAR(255),
+    fail_url VARCHAR(255),
+    aggregator_id VARCHAR(30),
+    merchant_order_number VARCHAR(30) PRIMARY KEY,
+    merchant_customer_id VARCHAR(30),
+    pay_mode VARCHAR(30),
+    access_medium VARCHAR(30),
+    transaction_source VARCHAR(30),
+    createdBy varchar(64) NULL,
+    lastModifiedBy varchar(64) NULL,
+    createdTime int8 NULL,
+    lastModifiedTime int8 NULL
+);
