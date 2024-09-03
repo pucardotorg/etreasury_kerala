@@ -47,6 +47,7 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .transactionDate(rs.getString("transaction_date"))
                 .cin(rs.getString("cin"))
                 .totalFeeGst(rs.getDouble("total_fee_gst"))
+                .rowVersion(rs.getInt("row_version"))
                 .ref1(rs.getString("ref1"))
                 .ref2(rs.getString("ref2"))
                 .ref3(rs.getString("ref3"))

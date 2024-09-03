@@ -25,6 +25,7 @@ CREATE TABLE transaction_details (
     transaction_date varchar(64) NULL,
     cin varchar(64) NULL,
     total_fee_gst NUMERIC(12,2),
+    row_version int4 NULL,
     ref1 varchar(64) NULL,
     ref2 varchar(64) NULL,
     ref3 varchar(64) NULL,
