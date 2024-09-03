@@ -46,11 +46,11 @@ public class PaymentService {
         String transactionString = request.getTransactionDetails().toString();
         SecretKeySpec secretKeySpec = aes256Util.readKeyBytes(config.getSbiSecretKey());
         String encryptedString = aes256Util.encrypt(transactionString, secretKeySpec);
-        String transactionUrl = config.getSbiTransactionUrl();
 
         Map<String, String> transactionMap = new HashMap<>();
         transactionMap.put("encryptedString", encryptedString);
-        transactionMap.put("transactionUrl", transactionUrl);
+        transactionMap.put("transactionUrl", config.getSbiTransactionUrl());
+        transactionMap.put("merchantId", config.getSbiMerchantId());
 
         producer.push("save-transaction-details", request);
         return transactionMap;

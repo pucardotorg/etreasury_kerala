@@ -38,7 +38,8 @@ public class PaymentController {
         return TransactionResponse.builder()
                 .encryptedString(transactionMap.get("encryptedString"))
                 .transactionUrl(transactionMap.get("transactionUrl"))
-                .responseInfo(responseInfo).build();
+                .responseInfo(responseInfo)
+                .merchantId(transactionMap.get("merchantId")).build();
     }
 
     @PostMapping("/v1/_decryptBrowserResponse")

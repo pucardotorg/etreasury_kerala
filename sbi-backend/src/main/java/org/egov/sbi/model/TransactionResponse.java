@@ -21,4 +21,7 @@ public class TransactionResponse {
 
     @JsonProperty("encryptedString")
     private String encryptedString;
+
+    @JsonProperty("merchantId")
+    private String merchantId;
 }
