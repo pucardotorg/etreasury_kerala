@@ -96,19 +96,19 @@ app.use(bodyParser.json());
   }
 
   app.post(`${successUrlContextPath}`, (req, res) => {
-    console.log('Request body:', JSON.stringify(req));
+    console.log('Request body:', JSON.stringify(req.body));
     callBackendService( backendUrl, req.body);
     forwardJspPage(res, '/success.jsp');
   });
   
   app.post(`${failUrlContextPath}`, (req, res) => {
-    console.log('Request body:', JSON.stringify(req));
+    console.log('Request body:', JSON.stringify(req.body));
     callBackendService( backendUrl, req.body);
     forwardJspPage(res, '/fail.jsp');
   });
 
   app.post(`${pushResponseContextPath}`, async (req, res) => {
-    console.log('Request body:', JSON.stringify(req));
+    console.log('Request body:', JSON.stringify(req.body));
     callBackendService( backendUrl, req.body);
   });
 
