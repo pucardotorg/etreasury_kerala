@@ -30,8 +30,6 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .merchantCurrency(rs.getString("merchant_currency"))
                 .postingAmount(rs.getDouble("posting_amount"))
                 .otherDetails(rs.getString("other_details"))
-                .successUrl(rs.getString("success_url"))
-                .failUrl(rs.getString("fail_url"))
                 .aggregatorId(rs.getString("aggregator_id"))
                 .merchantOrderNumber(rs.getString("merchant_order_number"))
                 .merchantCustomerId(rs.getString("merchant_customer_id"))
@@ -57,6 +55,7 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .ref7(rs.getString("ref7"))
                 .ref8(rs.getString("ref8"))
                 .ref9(rs.getString("ref9"))
+                .tenantId(rs.getString("tenant_id"))
                 .build();
     }
 }

@@ -52,4 +52,10 @@ public class PaymentConfiguration {
 
     @Value("${egov.idgen.name}")
     private String idName;
+
+    @Value(("${kafka.topic.insert.sbi.transaction.details}"))
+    private String createTransactionDetails;
+
+    @Value("${kafka.topic.update.sbi.transaction.details}")
+    private String updateTransactionDetails;
 }

@@ -31,13 +31,16 @@ public class PaymentService {
 
     private final TransactionDetailsRepository repository;
 
+    private final PaymentConfiguration paymentConfiguration;
+
     @Autowired
-    public PaymentService(PaymentEnrichment paymentEnrichment, Producer producer, AES256Util aes256Util, PaymentConfiguration config, TransactionDetailsRepository repository) {
+    public PaymentService(PaymentEnrichment paymentEnrichment, Producer producer, AES256Util aes256Util, PaymentConfiguration config, TransactionDetailsRepository repository, PaymentConfiguration paymentConfiguration) {
         this.paymentEnrichment = paymentEnrichment;
         this.producer = producer;
         this.aes256Util = aes256Util;
         this.config = config;
         this.repository = repository;
+        this.paymentConfiguration = paymentConfiguration;
     }
 
 
@@ -52,7 +55,7 @@ public class PaymentService {
         transactionMap.put("transactionUrl", config.getSbiTransactionUrl());
         transactionMap.put("merchantId", config.getSbiMerchantId());
 
-        producer.push("save-transaction-details", request);
+        producer.push(paymentConfiguration.getCreateTransactionDetails(), request);
         return transactionMap;
     }
 
@@ -69,7 +72,7 @@ public class PaymentService {
 
         TransactionRequest transactionRequest =  TransactionRequest.builder()
                 .requestInfo(request.getRequestInfo()).transactionDetails(transactionDetails).build();
-        producer.push("update-transaction-details", transactionRequest);
+        producer.push(paymentConfiguration.getUpdateTransactionDetails(), transactionRequest);
 
         return transactionDetails;
     }
