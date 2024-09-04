@@ -8,8 +8,8 @@ const app = express();
 const port = 8080;
 const backendUrl = process.env.EXTERNAL_HOST || "http://localhost:8088/sbi-backend/v1/_decryptBrowserResponse";
 const pushResponseContextPath = "/sbi-payments";
-const successUrlContextPath = "/sbi-payment/success.jsp";
-const failUrlContextPath = "/sbi-payment/fail.jsp";
+const successUrlContextPath = "/sbi-payments/success.jsp";
+const failUrlContextPath = "/sbi-payments/fail.jsp";
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -96,22 +96,36 @@ app.use(bodyParser.json());
     }
   }
 
-  app.post(`${successUrlContextPath}`, (req, res) => {
-    console.log('Request body:', JSON.stringify(req.body));
-    callBackendService( backendUrl, req.body);
+app.post(`${successUrlContextPath}`, async (req, res) => {
+  console.log('Request body:', JSON.stringify(req.body));
+  try {
+    await callBackendService(backendUrl, req.body);
     forwardJspPage(res, '/success.jsp');
-  });
-  
-  app.post(`${failUrlContextPath}`, (req, res) => {
-    console.log('Request body:', JSON.stringify(req.body));
-    callBackendService( backendUrl, req.body);
-    forwardJspPage(res, '/fail.jsp');
-  });
+  } catch (error) {
+    res.status(500).send('Failed to process payment');
+  }
+});
 
-  app.post(`${pushResponseContextPath}`, async (req, res) => {
-    console.log('Request body:', JSON.stringify(req.body));
-    callBackendService( backendUrl, req.body);
-  });
+app.post(`${failUrlContextPath}`, async (req, res) => {
+  console.log('Request body:', JSON.stringify(req.body));
+  try {
+    await callBackendService(backendUrl, req.body);
+    forwardJspPage(res, '/fail.jsp');
+  } catch (error) {
+    res.status(500).send('Failed to process payment');
+  }
+});
+
+app.post(`${pushResponseContextPath}`, async (req, res) => {
+  console.log('Request body:', JSON.stringify(req.body));
+  try {
+    await callBackendService(backendUrl, req.body);
+    res.status(200).send('Response processed successfully');
+  } catch (error) {
+    res.status(500).send('Failed to process response');
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`sbi payments app listening on port ${port}`);
