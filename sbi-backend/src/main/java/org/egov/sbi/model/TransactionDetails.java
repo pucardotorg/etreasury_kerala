@@ -118,6 +118,24 @@ public class TransactionDetails {
     @JsonProperty("billId")
     private String billId;
 
+    @JsonProperty("totalDue")
+    private double totalDue;
+
+    @JsonProperty("businessService")
+    private String businessService;
+
+    @JsonProperty("serviceNumber")
+    private String serviceNumber;
+
+    @JsonProperty("payerName")
+    private String payerName;
+
+    @JsonProperty("paidBy")
+    private String paidBy;
+
+    @JsonProperty("mobileNumber")
+    private String mobileNumber;
+
     @Override
     public String toString() {
         return merchantId + "|" +

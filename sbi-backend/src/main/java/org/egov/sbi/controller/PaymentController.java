@@ -6,12 +6,12 @@ import org.egov.sbi.model.*;
 import org.egov.sbi.service.PaymentService;
 import org.egov.sbi.util.ResponseInfoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -49,6 +49,18 @@ public class PaymentController {
         TransactionDetails transactionDetails = paymentService.decryptBrowserPayload(request);
         log.info("Decrypted Browser Response successfully for request: {}", request);
         return BrowserResponse.builder()
+                .responseInfo(responseInfo)
+                .transactionDetails(transactionDetails)
+                .build();
+    }
+
+    @PostMapping("/v1/_searchTransactions")
+    public TransactionSearchResponse searchTransactions(@RequestBody TransactionSearchRequest request) {
+        log.info("Search Transactions request: {}", request);
+        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        List<TransactionDetails> transactionDetails = paymentService.searchTransactions(request);
+        log.info("Completed Search Transactions request: {}", request);
+        return TransactionSearchResponse.builder()
                 .responseInfo(responseInfo)
                 .transactionDetails(transactionDetails)
                 .build();

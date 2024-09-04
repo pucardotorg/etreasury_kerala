@@ -57,6 +57,12 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .ref9(rs.getString("ref9"))
                 .tenantId(rs.getString("tenant_id"))
                 .billId(rs.getString("bill_id"))
+                .totalDue(rs.getDouble("total_due"))
+                .businessService(rs.getString("business_service"))
+                .serviceNumber(rs.getString("service_number"))
+                .payerName(rs.getString("payer_name"))
+                .paidBy(rs.getString("paid_by"))
+                .mobileNumber(rs.getString("mobile_number"))
                 .build();
     }
 }
