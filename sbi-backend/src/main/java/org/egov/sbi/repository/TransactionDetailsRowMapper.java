@@ -56,6 +56,7 @@ public class TransactionDetailsRowMapper implements RowMapper<TransactionDetails
                 .ref8(rs.getString("ref8"))
                 .ref9(rs.getString("ref9"))
                 .tenantId(rs.getString("tenant_id"))
+                .billId(rs.getString("bill_id"))
                 .build();
     }
 }
