@@ -112,6 +112,9 @@ public class TransactionDetails {
     @JsonProperty("Ref9")
     private String ref9;
 
+    @JsonProperty("tenantId")
+    private String tenantId;
+
     @Override
     public String toString() {
         return merchantId + "|" +
