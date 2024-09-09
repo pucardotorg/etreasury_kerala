@@ -46,6 +46,7 @@ jobs:
           docker push pucarsolutionsdev.azurecr.io/etreasury:v1.0.0-${{ github.sha }}
 
       - name: Build and Push Docker image for etreasury-db
+        if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
         run: |
           docker build -t pucarsolutionsdev.azurecr.io/etreasury_db:v1.0.0-${{ github.sha }}  .
           docker push pucarsolutionsdev.azurecr.io/etreasury_db:v1.0.0-${{ github.sha }}
