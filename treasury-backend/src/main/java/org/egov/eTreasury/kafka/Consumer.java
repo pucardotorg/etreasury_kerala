@@ -34,7 +34,7 @@ public class Consumer {
     public void listenForGenerateSummonsDocument(final Map<String, Object> recordMap, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         try {
             TreasuryPaymentRequest request = objectMapper.convertValue(recordMap, TreasuryPaymentRequest.class);
-            log.info("received paylod",request);
+            log.info("received payload {} :",request);
             paymentService.callCollectionServiceAndUpdatePayment(request);
         } catch (final Exception e) {
             log.error("Error while listening to value: {}: ", recordMap, e);
