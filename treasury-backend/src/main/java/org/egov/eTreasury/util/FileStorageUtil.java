@@ -16,13 +16,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import static org.egov.eTreasury.config.ServiceConstants.*;
+
 @Component
 @Slf4j
 public class FileStorageUtil {
-
-    private static final String FILE_STORE_ID_KEY = "fileStoreId";
-    private static final String FILES_KEY = "files";
-    private static final String DOCUMENT_TYPE_PDF = "application/pdf";
 
     private final RestTemplate restTemplate;
 
@@ -64,7 +62,7 @@ public class FileStorageUtil {
             return extractDocumentFromResponse(responseEntity);
         } catch (Exception e) {
             log.error("Error while saving document to file store: {}", e.getMessage(), e);
-            throw new CustomException("TREASURY_FILE_STORE_ERROR", "Error occurred when getting saving document in File Store");
+            throw new CustomException(FILESTORE_SERVICE_ERROR, "Error occurred when getting saving document in File Store");
         }
     }
 
@@ -86,7 +84,7 @@ public class FileStorageUtil {
             log.info("File Store Details: {}", document);
             return document;
         } else {
-            throw new CustomException("INVALID_FILE_STORE_ID", "Failed to get valid file store id from file store service");
+            throw new CustomException(INVALID_FILE_STORE_ID, "Failed to get valid file store id from file store service");
         }
     }
 }

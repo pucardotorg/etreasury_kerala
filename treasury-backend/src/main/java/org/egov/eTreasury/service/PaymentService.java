@@ -30,7 +30,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static org.egov.eTreasury.config.ServiceConstants.AUTH_TOKEN;
+import static org.egov.eTreasury.config.ServiceConstants.*;
 
 @Service
 @Slf4j
@@ -82,7 +82,7 @@ public class PaymentService {
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() != null) {
                 return objectMapper.readValue(responseEntity.getBody(), ConnectionStatus.class);
             } else {
-                throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
+                throw new CustomException(AUTHENTICATION_FAILED, "Authentication request failed with status: " + responseEntity.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Establishing a connection with ETreasury server failed: ", e);
@@ -109,11 +109,11 @@ public class PaymentService {
                 secretMap.put("sek", response.getData().getSek());
                 secretMap.put(AUTH_TOKEN, response.getData().getAuthToken());
             } else {
-               throw new CustomException("AUTHENTICATION_FAILED", "Authentication request failed with status: " + responseEntity.getStatusCode());
+               throw new CustomException(AUTHENTICATION_FAILED, "Authentication request failed with status: " + responseEntity.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Authentication process failed: ", e);
-            throw new CustomException("AUTHENTICATION_ERROR", "Error occurred during authentication");
+            throw new CustomException(AUTHENTICATION_ERROR, "Error occurred during authentication");
         }
         return secretMap;
     }
@@ -127,17 +127,7 @@ public class PaymentService {
             String decryptedSek = encryptionUtil.decryptAES(secretMap.get("sek"), secretMap.get("appKey"));
 
             String departmentId = idgenUtil.getIdList(requestInfo,config.getEgovStateTenantId(),config.getIdName(),null,1).get(0);
-            AuthSek authSek = AuthSek.builder()
-                    .authToken(secretMap.get(AUTH_TOKEN))
-                    .decryptedSek(decryptedSek)
-                    .billId(challanData.getBillId())
-                    .businessService(challanData.getBusinessService())
-                    .serviceNumber(challanData.getServiceNumber())
-                    .mobileNumber(challanData.getMobileNumber())
-                    .totalDue(challanData.getTotalDue())
-                    .paidBy(challanData.getPaidBy())
-                    .sessionTime(System.currentTimeMillis())
-                    .departmentId(departmentId).build();
+            AuthSek authSek = buildAuthSek(challanData, secretMap, decryptedSek, departmentId);
             saveAuthTokenAndSek(requestInfo, authSek);
 
             // Prepare the request body
@@ -157,8 +147,23 @@ public class PaymentService {
                     .data(postBody).headers(headersData).build();
         } catch (Exception e) {
             log.error("Payment processing error: ", e);
-            throw new CustomException("PAYMENT_PROCESSING_ERROR", "Error occurred during generation oF challan");
+            throw new CustomException(PAYMENT_PROCESSING_ERROR, "Error occurred during generation oF challan");
         }
+    }
+
+    private AuthSek buildAuthSek(ChallanData challanData, Map<String, String> secretMap, String decryptedSek, String departmentId) {
+        return AuthSek.builder()
+                .authToken(secretMap.get(AUTH_TOKEN))
+                .decryptedSek(decryptedSek)
+                .billId(challanData.getBillId())
+                .businessService(challanData.getBusinessService())
+                .serviceNumber(challanData.getServiceNumber())
+                .mobileNumber(challanData.getMobileNumber())
+                .totalDue(challanData.getTotalDue())
+                .paidBy(challanData.getPaidBy())
+                .sessionTime(System.currentTimeMillis())
+                .departmentId(departmentId)
+                .build();
     }
 
     public String printPayInSlipPdf(TreasuryPaymentRequest request) {
@@ -178,7 +183,7 @@ public class PaymentService {
             Optional<AuthSek> optionalAuthSek = repository.getAuthSek(treasuryParams.getAuthToken()).stream().findFirst();
             if (optionalAuthSek.isEmpty()) {
                 log.error("No AuthSek found for authToken: {}", treasuryParams.getAuthToken());
-                throw new CustomException("AUTH_SEK_NOT_FOUND", "No AuthSek found for the provided authToken");
+                throw new CustomException(AUTH_SEK_NOT_FOUND, "No AuthSek found for the provided authToken");
             }
 
             AuthSek authSek = optionalAuthSek.get();
@@ -211,7 +216,7 @@ public class PaymentService {
 
         } catch (Exception e) {
             log.error("Error occurred during decrypting Treasury Response: ", e);
-            throw new CustomException("TREASURY_RESPONSE_ERROR", "Error occurred during decrypting Treasury Response");
+            throw new CustomException(TREASURY_RESPONSE_ERROR, "Error occurred during decrypting Treasury Response");
         }
     }
 
@@ -295,7 +300,7 @@ public class PaymentService {
             return  Document.builder().fileStore(optionalPaymentData.get().getFileStoreId()).documentType("application/pdf").build();
         } else {
             log.error("No Payment data for given bill Id");
-            throw new CustomException("PAYMENT_RECEIPT_INVALID_BILL_ID", "Given Bill Id Has no Payment Data");
+            throw new CustomException(INVALID_BILL_ID, "Given Bill Id Has no Payment Data");
         }
     }
 

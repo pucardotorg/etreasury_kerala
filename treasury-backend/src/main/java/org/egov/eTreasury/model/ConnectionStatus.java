@@ -13,17 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ConnectionStatus {
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonProperty("REQUEST_TIME")
-    private LocalDateTime requestTime;
-
-    @JsonProperty("QUERY_TIME")
-    private double queryTime;
-
     @JsonProperty("STATUS")
     private String status;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonProperty("COMPLETION_TIME")
-    private LocalDateTime completionTime;
 }

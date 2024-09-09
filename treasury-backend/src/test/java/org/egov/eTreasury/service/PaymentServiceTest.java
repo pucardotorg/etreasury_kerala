@@ -59,27 +59,28 @@ class PaymentServiceTest {
     @Mock
     private TransactionDetails transactionDetails;
 
-//    @Test
-//    void verifyConnection_success() {
-//        ConnectionStatus mockStatus = new ConnectionStatus();
-//        when(config.getServerStatusUrl()).thenReturn("http://test-url.com");
-//        when(treasuryUtil.callConnectionService(anyString(), eq(ConnectionStatus.class)))
-//                .thenReturn(ResponseEntity.ok(mockStatus));
-//
-//        ConnectionStatus result = paymentService.verifyConnection();
-//
-//        assertNotNull(result);
-//        verify(treasuryUtil).callConnectionService(anyString(), eq(ConnectionStatus.class));
-//    }
+    @Test
+    void verifyConnection_success() {
+        ConnectionStatus mockStatus = new ConnectionStatus();
+        when(config.getServerStatusUrl()).thenReturn("http://test-url.com");
+        when(treasuryUtil.callConnectionService(anyString(), any()))
+                .thenReturn(ResponseEntity.ok(mockStatus));
 
-//    @Test
-//    void verifyConnection_failure() {
-//        when(config.getServerStatusUrl()).thenReturn("http://test-url.com");
-//        when(treasuryUtil.callConnectionService(anyString(), eq(ConnectionStatus.class)))
-//                .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-//
-//        assertThrows(CustomException.class, () -> paymentService.verifyConnection());
-//    }
+        ConnectionStatus result = paymentService.verifyConnection();
+
+        assertNotNull(result);
+    }
+
+    @Test
+    void verifyConnection_failure() {
+        when(config.getServerStatusUrl()).thenReturn("http://test-url.com");
+        when(treasuryUtil.callConnectionService(anyString(), eq(ConnectionStatus.class)))
+                .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+
+        ConnectionStatus result = paymentService.verifyConnection();
+
+        assertNotNull(result);
+    }
 
     @Test
     void getTreasuryPaymentData_success() {
@@ -172,12 +173,12 @@ class PaymentServiceTest {
         assertEquals(treasuryPaymentData.getAmount(), BigDecimal.valueOf(10));
     }
 
-//    @Test
-//    void testDecryptAndProcessTreasuryPayLoadListNull() {
-//        TreasuryParams treasuryParams = mock(TreasuryParams.class);
-//        RequestInfo requestInfo = mock(RequestInfo.class);
-//        ArrayList<AuthSek> list = new ArrayList<>();
-//        when(authSekRepository.getAuthSek(treasuryParams.getAuthToken())).thenReturn(list);
-//        paymentService.decryptAndProcessTreasuryPayload(treasuryParams,requestInfo);
-//    }
+    @Test
+    void testDecryptAndProcessTreasuryPayLoadListNull() {
+        TreasuryParams treasuryParams = mock(TreasuryParams.class);
+        RequestInfo requestInfo = mock(RequestInfo.class);
+        ArrayList<AuthSek> list = new ArrayList<>();
+        when(authSekRepository.getAuthSek(treasuryParams.getAuthToken())).thenReturn(list);
+       assertThrows(CustomException.class, () -> paymentService.decryptAndProcessTreasuryPayload(treasuryParams,requestInfo));
+    }
 }
