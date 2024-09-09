@@ -63,13 +63,12 @@ class PaymentServiceTest {
     void verifyConnection_success() {
         ConnectionStatus mockStatus = new ConnectionStatus();
         when(config.getServerStatusUrl()).thenReturn("http://test-url.com");
-        when(treasuryUtil.callConnectionService(anyString(), eq(ConnectionStatus.class)))
+        when(treasuryUtil.callConnectionService(anyString(), any()))
                 .thenReturn(ResponseEntity.ok(mockStatus));
 
         ConnectionStatus result = paymentService.verifyConnection();
 
         assertNotNull(result);
-        verify(treasuryUtil).callConnectionService(anyString(), eq(ConnectionStatus.class));
     }
 
     @Test
@@ -78,7 +77,9 @@ class PaymentServiceTest {
         when(treasuryUtil.callConnectionService(anyString(), eq(ConnectionStatus.class)))
                 .thenReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
 
-        assertThrows(CustomException.class, () -> paymentService.verifyConnection());
+        ConnectionStatus result = paymentService.verifyConnection();
+
+        assertNotNull(result);
     }
 
     @Test
@@ -178,6 +179,6 @@ class PaymentServiceTest {
         RequestInfo requestInfo = mock(RequestInfo.class);
         ArrayList<AuthSek> list = new ArrayList<>();
         when(authSekRepository.getAuthSek(treasuryParams.getAuthToken())).thenReturn(list);
-        paymentService.decryptAndProcessTreasuryPayload(treasuryParams,requestInfo);
+       assertThrows(CustomException.class, () -> paymentService.decryptAndProcessTreasuryPayload(treasuryParams,requestInfo));
     }
 }

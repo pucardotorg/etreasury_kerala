@@ -41,7 +41,7 @@ class PaymentControllerTest {
         when(paymentService.verifyConnection()).thenReturn(connectionStatus);
 
         // Act
-        ConnectionResponse responseEntity = paymentController.verifyServerConnection(
+        ConnectionResponse responseEntity = paymentController.verifyServerConnection("kl",
                 new RequestInfo()
         );
 

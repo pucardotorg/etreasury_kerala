@@ -52,4 +52,25 @@ public class ServiceConstants {
     public static final String AUTH_TOKEN = "authToken";
 
     public static final String TRANSFORMATION = "AES/ECB/PKCS5Padding";
+
+    public static final String AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
+
+    public static final String AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR";
+
+    public static final String PAYMENT_PROCESSING_ERROR = "PAYMENT_PROCESSING_ERROR";
+
+    public static final String AUTH_SEK_NOT_FOUND = "AUTH_SEK_NOT_FOUND";
+    public static final String TREASURY_RESPONSE_ERROR = "TREASURY_RESPONSE_ERROR";
+
+    public static final String INVALID_BILL_ID = "PAYMENT_RECEIPT_INVALID_BILL_ID";
+
+    public static final String FILESTORE_UTILITY_EXCEPTION = "FILESTORE_UTILITY_EXCEPTION";
+    public static final String INVALID_FILE_STORE_ID = "INVALID_FILE_STORE_ID";
+
+    public static final String PDFSERVICE_UTILITY_EXCEPTION = "PDFSERVICE_UTILITY_EXCEPTION";
+
+    public static final String FILE_STORE_ID_KEY = "fileStoreId";
+    public static final String FILES_KEY = "files";
+    public static final String DOCUMENT_TYPE_PDF = "application/pdf";
+
 }

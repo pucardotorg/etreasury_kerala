@@ -92,4 +92,10 @@ public class PaymentConfiguration {
 
     @Value("${egov.pdf.template.key}")
     private String pdfTemplateKey;
+
+    @Value("${kafka.topic.create.treasury.payment.data}")
+    private String saveTreasuryPaymentData;
+
+    @Value(("${isTest.enabled}"))
+    private boolean isTest;
 }
