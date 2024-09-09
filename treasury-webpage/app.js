@@ -37,7 +37,7 @@ app.post(`${contextPath}`, async (req, res) => {
     const requestInfo = await getRequestInfo();
 
     const treasuryParams = {
-      status: paymentStatus,
+      status: treasuryStatus,
       rek: returnParams.rek,
       data: returnParams.data,
       hmac: returnParams.hmac,
