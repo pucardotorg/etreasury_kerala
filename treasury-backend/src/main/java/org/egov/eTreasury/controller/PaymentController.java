@@ -44,12 +44,13 @@ public class PaymentController {
     }
 
     @PostMapping("/v1/_decryptTreasuryResponse")
-    public ResponseEntity<TreasuryPaymentResponse> decryptTreasuryResponse(@RequestBody TreasuryRequest request) {
+    public TreasuryPaymentResponse decryptTreasuryResponse(@RequestBody TreasuryRequest request) {
         log.info("Decrypting Treasury Response for request: {}", request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
         TreasuryPaymentData treasuryPaymentData = paymentService.decryptAndProcessTreasuryPayload(request.getTreasuryParams(), request.getRequestInfo());
         log.info("Decrypted Treasury Response successfully for request: {}", request);
-        return ResponseEntity.ok(TreasuryPaymentResponse.builder().responseInfo(responseInfo).treasuryPaymentData(treasuryPaymentData).build());
+        return TreasuryPaymentResponse.builder()
+                .responseInfo(responseInfo).treasuryPaymentData(treasuryPaymentData).build();
     }
 
     @PostMapping("/v1/_getPaymentReceipt")
