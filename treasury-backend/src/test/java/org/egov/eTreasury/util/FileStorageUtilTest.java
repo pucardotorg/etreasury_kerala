@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
+import static org.egov.eTreasury.config.ServiceConstants.FILESTORE_UTILITY_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -89,7 +90,7 @@ class FileStorageUtilTest {
         // Act & Assert
         CustomException thrown = assertThrows(CustomException.class, () ->
                 fileStorageUtil.saveDocumentToFileStore(payInSlipBytes));
-        assertEquals("TREASURY_FILE_STORE_ERROR", thrown.getCode());
+        assertEquals(FILESTORE_UTILITY_EXCEPTION, thrown.getCode());
         assertEquals("Error occurred when getting saving document in File Store", thrown.getMessage());
     }
 
@@ -120,7 +121,7 @@ class FileStorageUtilTest {
                 fileStorageUtil.saveDocumentToFileStore(payInSlipBytes));
 
         // Assert
-        assertEquals("TREASURY_FILE_STORE_ERROR", thrown.getCode());
+        assertEquals(FILESTORE_UTILITY_EXCEPTION, thrown.getCode());
         assertEquals("Error occurred when getting saving document in File Store", thrown.getMessage());
     }
 }

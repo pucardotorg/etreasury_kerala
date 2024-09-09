@@ -62,7 +62,7 @@ public class FileStorageUtil {
             return extractDocumentFromResponse(responseEntity);
         } catch (Exception e) {
             log.error("Error while saving document to file store: {}", e.getMessage(), e);
-            throw new CustomException(FILESTORE_SERVICE_ERROR, "Error occurred when getting saving document in File Store");
+            throw new CustomException(FILESTORE_UTILITY_EXCEPTION, "Error occurred when getting saving document in File Store");
         }
     }
 

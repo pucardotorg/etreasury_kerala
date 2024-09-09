@@ -95,4 +95,7 @@ public class PaymentConfiguration {
 
     @Value("${kafka.topic.create.treasury.payment.data}")
     private String saveTreasuryPaymentData;
+
+    @Value(("${isTest.enabled}"))
+    private boolean isTest;
 }

@@ -1,5 +1,6 @@
 package org.egov.eTreasury.util;
 
+import static org.egov.eTreasury.config.ServiceConstants.PDFSERVICE_UTILITY_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -70,7 +71,7 @@ public class PdfServiceUtilTest {
         });
 
         assertNotNull(thrownException);
-        assertEquals("SU_PDF_APP_ERROR", thrownException.getCode());
+        assertEquals(PDFSERVICE_UTILITY_EXCEPTION, thrownException.getCode());
         assertEquals("Error getting response from Pdf Service", thrownException.getMessage());
     }
 }

@@ -64,8 +64,10 @@ public class ServiceConstants {
 
     public static final String INVALID_BILL_ID = "PAYMENT_RECEIPT_INVALID_BILL_ID";
 
-    public static final String FILESTORE_SERVICE_ERROR = "TREASURY_FILE_STORE_ERROR";
+    public static final String FILESTORE_UTILITY_EXCEPTION = "FILESTORE_UTILITY_EXCEPTION";
     public static final String INVALID_FILE_STORE_ID = "INVALID_FILE_STORE_ID";
+
+    public static final String PDFSERVICE_UTILITY_EXCEPTION = "PDFSERVICE_UTILITY_EXCEPTION";
 
     public static final String FILE_STORE_ID_KEY = "fileStoreId";
     public static final String FILES_KEY = "files";

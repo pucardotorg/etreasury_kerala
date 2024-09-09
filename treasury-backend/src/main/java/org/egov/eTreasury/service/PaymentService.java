@@ -306,6 +306,11 @@ public class PaymentService {
 
     public void callCollectionServiceAndUpdatePayment(TreasuryPaymentRequest request) {
 
+        String paymentStatus = String.valueOf(request.getTreasuryPaymentData().getStatus());
+        if(!config.isTest() && paymentStatus.equals("N")){
+            return;
+        }
+
         PaymentDetail paymentDetail = PaymentDetail.builder()
                 .billId(request.getTreasuryPaymentData().getBillId())
                 .totalDue(BigDecimal.valueOf(request.getTreasuryPaymentData().getTotalDue()))
@@ -325,7 +330,7 @@ public class PaymentService {
                 .paymentMode("ONLINE")
                 .fileStoreId(request.getTreasuryPaymentData().getFileStoreId())
                 .build();
-        String paymentStatus = String.valueOf(request.getTreasuryPaymentData().getStatus());
+
         if (paymentStatus.equals("Y")) {
             payment.setPaymentStatus("DEPOSITED");
         }

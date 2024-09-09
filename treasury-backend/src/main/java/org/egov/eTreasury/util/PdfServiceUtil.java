@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import static org.egov.eTreasury.config.ServiceConstants.PDFSERVICE_UTILITY_EXCEPTION;
+
 @Component
 @Slf4j
 public class PdfServiceUtil {
@@ -46,7 +48,7 @@ public class PdfServiceUtil {
             return responseEntity.getBody();
         } catch (Exception e) {
             log.error("Error getting response from Pdf Service", e);
-            throw new CustomException("SU_PDF_APP_ERROR", "Error getting response from Pdf Service");
+            throw new CustomException(PDFSERVICE_UTILITY_EXCEPTION, "Error getting response from Pdf Service");
         }
     }
 }
