@@ -42,7 +42,7 @@ jobs:
       - name: Build and Push Docker image for etreasury-svc
         if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
         run: |
-          docker build --build-arg WORK_DIR="sbi-backend" -t pucarsolutionsdev.azurecr.io/etreasury:v1.0.0-${{ github.sha }} -f build/maven/Dockerfile .
+          docker build --build-arg WORK_DIR="treasury-backend" -t pucarsolutionsdev.azurecr.io/etreasury:v1.0.0-${{ github.sha }} -f build/maven/Dockerfile .
           docker push pucarsolutionsdev.azurecr.io/etreasury:v1.0.0-${{ github.sha }}
 
       - name: Build and Push Docker image for etreasury-db
